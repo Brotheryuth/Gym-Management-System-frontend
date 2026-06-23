@@ -166,7 +166,7 @@ export default function PaymentModal({
         {paymentMethod === 'CREDITCARD' && (
           <div className="card-terminal-display">
             <div className="terminal-status-ring">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="2.5">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2.5">
                 <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
                 <line x1="2" y1="10" x2="22" y2="10"></line>
               </svg>

@@ -44,9 +44,9 @@ export default function Button({
     if (variant === 'primary') {
       return {
         ...base,
-        backgroundColor: 'var(--accent-orange)',
+        backgroundColor: 'var(--accent-blue)',
         color: '#ffffff',
-        boxShadow: '0 4px 12px rgba(255, 87, 34, 0.2)',
+        boxShadow: '0 4px 12px rgba(57, 113, 184, 0.2)',
       };
     }
 
@@ -94,8 +94,8 @@ export default function Button({
     >
       <style>{`
         .btn-primary:not(:disabled):hover {
-          background-color: var(--accent-orange-hover) !important;
-          box-shadow: 0 6px 16px rgba(255, 87, 34, 0.3) !important;
+          background-color: var(--accent-blue-hover) !important;
+          box-shadow: 0 6px 16px rgba(57, 113, 184, 0.3) !important;
           transform: translateY(-1px);
         }
         .btn-primary:not(:disabled):active {

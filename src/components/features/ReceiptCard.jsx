@@ -61,14 +61,14 @@ export default function ReceiptCard({
 
         <div className="receipt-details-row">
           <span className="label">Membership Validity</span>
-          <span className="val" style={{ color: 'var(--accent-orange)' }}>
+          <span className="val" style={{ color: 'var(--accent-blue)' }}>
             Until {getExpiryDate()}
           </span>
         </div>
 
         <div className="receipt-details-row" style={{ borderTop: '1px dotted var(--color-border)', paddingTop: '12px', marginTop: '4px' }}>
           <span className="label" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Total Amount Paid</span>
-          <span className="val" style={{ fontSize: '18px', fontWeight: 800, color: 'var(--accent-orange)' }}>
+          <span className="val" style={{ fontSize: '18px', fontWeight: 800, color: 'var(--accent-blue)' }}>
             ${receiptData.finalAmount.toFixed(2)}
           </span>
         </div>

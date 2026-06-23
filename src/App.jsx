@@ -5,7 +5,6 @@ import MemberForm from './components/features/MemberForm';
 import PlanSelection from './components/features/PlanSelection';
 import PaymentModal from './components/features/PaymentModal';
 import ReceiptCard from './components/features/ReceiptCard';
-import RecentMembersList from './components/features/RecentMembersList';
 import Button from './components/ui/Button';
 import './App.css';
 
@@ -37,11 +36,12 @@ export default function App() {
     bypassLogin
   } = useGymApi();
 
+  const [activeView, setActiveView] = useState('dashboard');
   const [form, setForm] = useState(DEFAULT_FORM_STATE);
   const [errors, setErrors] = useState({});
   const [isFormLoading, setIsFormLoading] = useState(false);
 
-  // Redesign state tracking split workflow
+  // Redesign split workflow state
   const [registeredMember, setRegisteredMember] = useState(null);
 
   // Modal and Receipt step flows
@@ -176,15 +176,14 @@ export default function App() {
       const response = await registerMember(memberPayload);
       setRegisteredMember(response);
     } catch (err) {
-      // Error is caught and displayed through hook error
+      // API error displays through hook states
     } finally {
       setIsFormLoading(false);
     }
   };
 
   // Step 2: Submit Subscription to API (/api/memberships)
-  const handleCreateMembership = async (e) => {
-    if (e) e.preventDefault();
+  const handleCreateMembership = async () => {
     setPaymentError('');
     if (!registeredMember) return;
     if (!validateBillingForm()) return;
@@ -208,11 +207,11 @@ export default function App() {
       });
       setIsPaymentOpen(true);
     } catch (err) {
-      // Error is handled
+      // Error is caught and displayed through hook error
     }
   };
 
-  // Handle gateway recovery switches inside the overlay modal
+  // Switch payment method inside payment modal
   const handlePaymentMethodChange = (newMethod) => {
     setPendingSubscription(prev => {
       if (!prev) return null;
@@ -221,7 +220,7 @@ export default function App() {
     setPaymentError('');
   };
 
-  // Confirm payment success (Step 4 -> process payment API)
+  // Step 4: Confirm Payment Successful
   const handleConfirmPayment = async () => {
     if (!pendingSubscription) return;
     setPaymentError('');
@@ -239,7 +238,7 @@ export default function App() {
         startDate: form.startDate
       };
 
-      // Add record to left/sidebar logs
+      // Push into recent list database
       commitNewSubscriber(receiptPayload, selectedPlanObj);
 
       // Advance to success view
@@ -247,11 +246,11 @@ export default function App() {
       setIsPaymentOpen(false);
       setPendingSubscription(null);
     } catch (err) {
-      setPaymentError(err.message || 'Payment authentication failed. Please try again.');
+      setPaymentError(err.message || 'Payment processing failed. Card declined or terminal error.');
     }
   };
 
-  // Reset workspace
+  // Reset workflow and return to landing dashboard
   const handleResetFlow = () => {
     setActiveReceipt(null);
     setRegisteredMember(null);
@@ -261,6 +260,7 @@ export default function App() {
       planID: plans.length > 0 ? String(plans[0].planID) : '',
       startDate: new Date().toISOString().split('T')[0]
     }));
+    setActiveView('dashboard');
   };
 
   if (!cashier) {
@@ -274,14 +274,13 @@ export default function App() {
     );
   }
 
-  // Live total calculations
   const currentPlan = plans.find(p => String(p.planID) === String(form.planID));
   const basePrice = currentPlan ? Number(currentPlan.planPrice) : 0;
   const finalPrice = Math.max(0, basePrice - (basePrice * (Number(form.discount) || 0)) / 100);
 
   return (
     <div className="app-shell">
-      {/* Left Sidebar Category Menu */}
+      {/* Redesigned Left Sidebar - Crisp light energy theme */}
       <aside className="app-sidebar">
         <div className="sidebar-brand">
           <div className="sidebar-logo">G</div>
@@ -289,27 +288,35 @@ export default function App() {
         </div>
 
         <nav className="sidebar-nav">
-          <button type="button" className="nav-item active">
+          <button 
+            type="button" 
+            className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveView('dashboard')}
+          >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
               <rect x="3" y="3" width="7" height="9"></rect>
               <rect x="14" y="3" width="7" height="5"></rect>
               <rect x="14" y="12" width="7" height="9"></rect>
               <rect x="3" y="16" width="7" height="5"></rect>
             </svg>
-            Cashier Terminal
+            Dashboard Overview
           </button>
           
-          <button type="button" className="nav-item" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+          <button 
+            type="button" 
+            className={`nav-item ${activeView === 'register' ? 'active' : ''}`}
+            onClick={() => setActiveView('register')}
+          >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <line x1="20" y1="8" x2="20" y2="14"></line>
+              <line x1="17" y1="11" x2="23" y2="11"></line>
             </svg>
-            Members Directory
+            Register Member
           </button>
           
-          <button type="button" className="nav-item" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+          <button type="button" className="nav-item" disabled style={{ opacity: 0.4, cursor: 'not-allowed' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
@@ -317,7 +324,7 @@ export default function App() {
             Billing Ledger
           </button>
           
-          <button type="button" className="nav-item" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+          <button type="button" className="nav-item" disabled style={{ opacity: 0.4, cursor: 'not-allowed' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
               <circle cx="12" cy="12" r="3"></circle>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -331,11 +338,13 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Main Content Workspace Layout */}
+      {/* Main Workspace Layout */}
       <div className="main-layout">
-        {/* Top bar header */}
+        {/* Header bar */}
         <header className="dashboard-header">
-          <h2 className="header-title">Cashier Terminal</h2>
+          <h2 className="header-title">
+            {activeView === 'dashboard' ? 'Dashboard Overview' : 'Register Member'}
+          </h2>
           
           <div className="header-meta">
             <div className={`status-badge ${isSimulated ? 'simulated' : 'connected'}`}>
@@ -363,80 +372,200 @@ export default function App() {
           </div>
         </header>
 
-        {/* Form area grid */}
-        <div className="dashboard-grid">
-          <div className="workspace-left">
-            {activeReceipt ? (
-              <ReceiptCard
-                receiptData={activeReceipt}
-                planDetails={plans.find(p => String(p.planID) === String(activeReceipt.planID))}
-                onReset={handleResetFlow}
-              />
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                
-                {apiError && (
-                  <div style={{
-                    backgroundColor: 'var(--color-error-bg)',
-                    border: '1.5px solid var(--color-error)',
-                    color: 'var(--color-error)',
-                    padding: '16px',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '14px',
-                    fontWeight: 600
-                  }}>
-                    Server Error: {apiError}
+        {/* Dynamic Landing Panels based on activeView state */}
+        {activeView === 'dashboard' ? (
+          <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr' }}>
+            <div className="workspace-left">
+              {/* Summary Stats Grid */}
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div>
+                    <div className="stat-label">Active Members</div>
+                    <div className="stat-value">{recentMembers.length + 142}</div>
                   </div>
-                )}
+                  <div className="stat-icon-wrapper" style={{ color: 'var(--accent-indigo)', backgroundColor: 'var(--accent-indigo-light)' }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                </div>
 
-                {/* Step 1 Component */}
-                <MemberForm
-                  formData={form}
-                  errors={errors}
-                  onChange={handleFormChange}
-                  onRegister={handleRegisterMember}
-                  registeredMember={registeredMember}
-                  isLoading={isFormLoading}
-                />
+                <div className="stat-card">
+                  <div>
+                    <div className="stat-label">Shift Sales</div>
+                    <div className="stat-value">$1,420.00</div>
+                  </div>
+                  <div className="stat-icon-wrapper" style={{ color: 'var(--accent-teal)', backgroundColor: 'var(--accent-teal-light)' }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="12" y1="1" x2="12" y2="23"></line>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                  </div>
+                </div>
 
-                {/* Step 2 Component */}
-                <PlanSelection
-                  plans={plans}
-                  selectedPlanID={form.planID}
-                  discount={form.discount}
-                  paymentMethod={form.paymentMethod}
-                  startDate={form.startDate}
-                  errors={errors}
-                  onChange={handleFormChange}
-                  registeredMember={registeredMember}
-                />
-
-                {/* Step 2 process button - only enabled once registeredMember is set */}
-                {registeredMember && (
-                  <Button
-                    type="button"
-                    onClick={handleCreateMembership}
-                    loading={isLoading}
-                    style={{ fontSize: '16px' }}
-                  >
-                    Create Membership & Process Payment (${finalPrice.toFixed(2)})
-                  </Button>
-                )}
+                <div className="stat-card">
+                  <div>
+                    <div className="stat-label">Active Gateway</div>
+                    <div className="stat-value">KHQR Active</div>
+                  </div>
+                  <div className="stat-icon-wrapper" style={{ color: 'var(--accent-orange)', backgroundColor: 'var(--accent-orange-light)' }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <rect x="3" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="14" width="7" height="7"></rect>
+                      <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Sidebar Registrations */}
-          <div className="workspace-right">
-            <RecentMembersList
-              members={recentMembers}
-              isLoading={isLoading && recentMembers.length === 0}
-            />
+              {/* Command Welcome Card with Direct Registration Button */}
+              <div className="command-center-box">
+                <div className="command-info-group">
+                  <h3>Welcome to the Cashier Dashboard</h3>
+                  <p>Process customer entries, track transaction totals, and create memberships.</p>
+                </div>
+                
+                <Button
+                  onClick={() => setActiveView('register')}
+                  style={{ width: 'auto', minWidth: '200px' }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '8px', verticalAlign: 'middle' }}>
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="8.5" cy="7" r="4"></circle>
+                    <line x1="20" y1="8" x2="20" y2="14"></line>
+                    <line x1="17" y1="11" x2="23" y2="11"></line>
+                  </svg>
+                  Register Member
+                </Button>
+              </div>
+
+              {/* Database List Table */}
+              <div className="dashboard-table-card">
+                <div className="table-title-area">
+                  <h3 className="table-title">Recent Gym Registrations</h3>
+                </div>
+                
+                <div className="dashboard-table-container">
+                  <table className="dashboard-table">
+                    <thead>
+                      <tr>
+                        <th>Member Name</th>
+                        <th>Phone Number</th>
+                        <th>Gender</th>
+                        <th>Plan Name</th>
+                        <th>Account Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentMembers.map((m) => (
+                        <tr key={m.id}>
+                          <td style={{ fontWeight: 700 }}>{m.fullName}</td>
+                          <td>{m.phoneNumber}</td>
+                          <td>{m.gender}</td>
+                          <td>
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                              {m.planName}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="member-status-tag">{m.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="dashboard-grid">
+            <div className="workspace-left">
+              {/* Back CTA Button */}
+              <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '8px' }}>
+                <Button 
+                  variant="secondary"
+                  onClick={handleResetFlow}
+                  style={{ width: 'auto', minHeight: '38px', padding: '6px 16px', fontSize: '13px' }}
+                >
+                  Back to Dashboard
+                </Button>
+              </div>
+
+              {activeReceipt ? (
+                <ReceiptCard
+                  receiptData={activeReceipt}
+                  planDetails={plans.find(p => String(p.planID) === String(activeReceipt.planID))}
+                  onReset={handleResetFlow}
+                />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  
+                  {apiError && (
+                    <div style={{
+                      backgroundColor: 'var(--color-error-bg)',
+                      border: '1.5px solid var(--color-error)',
+                      color: 'var(--color-error)',
+                      padding: '16px',
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '14px',
+                      fontWeight: 600
+                    }}>
+                      Server Error: {apiError}
+                    </div>
+                  )}
+
+                  {/* Step 1 Profile registration */}
+                  <MemberForm
+                    formData={form}
+                    errors={errors}
+                    onChange={handleFormChange}
+                    onRegister={handleRegisterMember}
+                    registeredMember={registeredMember}
+                    isLoading={isFormLoading}
+                  />
+
+                  {/* Step 2 Billing setup */}
+                  <PlanSelection
+                    plans={plans}
+                    selectedPlanID={form.planID}
+                    discount={form.discount}
+                    paymentMethod={form.paymentMethod}
+                    startDate={form.startDate}
+                    errors={errors}
+                    onChange={handleFormChange}
+                    registeredMember={registeredMember}
+                  />
+
+                  {/* Step 2 Checkout activation button */}
+                  {registeredMember && (
+                    <Button
+                      type="button"
+                      onClick={handleCreateMembership}
+                      loading={isLoading}
+                      style={{ fontSize: '16px' }}
+                    >
+                      Create Membership & Process Payment (${finalPrice.toFixed(2)})
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar list logs preview */}
+            <div className="workspace-right" style={{ paddingTop: activeReceipt ? '0' : '46px' }}>
+              <RecentMembersList
+                members={recentMembers}
+                isLoading={isLoading && recentMembers.length === 0}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Payment Confirmation Modal Overlay */}
+      {/* Confirmation modal */}
       {pendingSubscription && (
         <PaymentModal
           isOpen={isPaymentOpen}
