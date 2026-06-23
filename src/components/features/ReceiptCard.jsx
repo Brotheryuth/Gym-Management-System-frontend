@@ -8,10 +8,9 @@ export default function ReceiptCard({
   onReset
 }) {
   const handlePrint = () => {
-    alert(`🖨️ Printing Receipt to cash register thermal printer...\n\nTransaction: ${receiptData.paymentID}\nMember: ${receiptData.memberName}\nTotal: $${receiptData.finalAmount.toFixed(2)}`);
+    alert(`Printing Receipt to cash register thermal printer...\n\nTransaction: ${receiptData.paymentID}\nMember: ${receiptData.memberName}\nTotal: $${receiptData.finalAmount.toFixed(2)}`);
   };
 
-  // Compute expiration date based on startDate + duration
   const getExpiryDate = () => {
     try {
       const start = new Date(receiptData.startDate || new Date());
@@ -26,7 +25,11 @@ export default function ReceiptCard({
   return (
     <Card className="receipt-ticket">
       <div className="receipt-header">
-        <div className="receipt-success-icon">✓</div>
+        <div className="receipt-success-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
         <h2 style={{ fontSize: '24px', fontWeight: 800, margin: '8px 0 2px' }}>
           Registration Complete
         </h2>
@@ -73,7 +76,14 @@ export default function ReceiptCard({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <Button onClick={handlePrint} variant="secondary">
-          🖨️ Print Thermal Receipt
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Print Thermal Receipt
+          </span>
         </Button>
         
         <Button onClick={onReset}>

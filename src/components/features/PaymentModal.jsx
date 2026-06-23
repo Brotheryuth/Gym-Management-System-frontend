@@ -2,13 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import InputField from '../ui/InputField';
-import SelectField from '../ui/SelectField';
-
-const METHOD_OPTIONS = [
-  { value: 'KHQR', label: 'KHQR (Mobile Scan)' },
-  { value: 'BYCASH', label: 'BYCASH (Physical Cash)' },
-  { value: 'CREDITCARD', label: 'CREDITCARD (POS Terminal)' }
-];
 
 export default function PaymentModal({
   isOpen,
@@ -26,7 +19,6 @@ export default function PaymentModal({
   const [cashChange, setCashChange] = useState(0);
   const [cashError, setCashError] = useState('');
 
-  // Auto-fill cash received or reset states when modal visibility shifts
   useEffect(() => {
     if (isOpen) {
       setCashReceived('');
@@ -62,6 +54,41 @@ export default function PaymentModal({
     onConfirm();
   };
 
+  const gateways = [
+    {
+      id: 'KHQR',
+      title: 'KHQR Scan',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="gateway-card-icon">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+      )
+    },
+    {
+      id: 'BYCASH',
+      title: 'Physical Cash',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="gateway-card-icon">
+          <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+          <circle cx="12" cy="12" r="2"></circle>
+        </svg>
+      )
+    },
+    {
+      id: 'CREDITCARD',
+      title: 'POS Card',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="gateway-card-icon">
+          <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="2" y1="10" x2="22" y2="10"></line>
+        </svg>
+      )
+    }
+  ];
+
   return (
     <Modal isOpen={isOpen} title="Interactive Terminal Processing" onClose={onClose}>
       <div className="payment-modal-content">
@@ -89,11 +116,10 @@ export default function PaymentModal({
             marginBottom: '20px',
             width: '100%'
           }}>
-            ⚠️ Terminal Error: {error}
+            Terminal Warning: {error}
           </div>
         )}
 
-        {/* Dynamic Payment Method Layout */}
         {paymentMethod === 'KHQR' && (
           <div>
             <div className="qr-code-box">
@@ -109,7 +135,7 @@ export default function PaymentModal({
               <div className="qr-logo-overlay">KH</div>
             </div>
             <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Ask member to scan this QR via Bakong or local banking app
+              Instruct member to scan this QR code using their banking application
             </p>
           </div>
         )}
@@ -146,12 +172,11 @@ export default function PaymentModal({
               </svg>
             </div>
             <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-              Waiting for member to tap or insert card in terminal...
+              Awaiting reader interaction. Insert or tap payment card on active terminal.
             </p>
           </div>
         )}
 
-        {/* Fitts's Law Button */}
         <Button
           type="button"
           onClick={handleConfirmClick}
@@ -162,13 +187,20 @@ export default function PaymentModal({
 
         {/* Resilient Payment switcher inside modal */}
         <div className="payment-selector-dropdown-wrapper">
-          <SelectField
-            label="Gateway Recovery (Switch payment method)"
-            options={METHOD_OPTIONS}
-            value={paymentMethod}
-            onChange={(e) => onMethodChange(e.target.value)}
-            disabled={isLoading}
-          />
+          <label className="form-label" style={{ marginBottom: '8px' }}>Gateway Recovery (Switch payment method)</label>
+          <div className="gateway-grid">
+            {gateways.map((g) => (
+              <div
+                key={g.id}
+                className={`gateway-card ${paymentMethod === g.id ? 'active' : ''}`}
+                onClick={() => !isLoading && onMethodChange(g.id)}
+                style={{ padding: '10px', gap: '6px' }}
+              >
+                {g.icon}
+                <span className="gateway-card-title" style={{ fontSize: '11px' }}>{g.title}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </Modal>

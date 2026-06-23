@@ -50,7 +50,6 @@ export default function useGymApi() {
     setError(null);
     try {
       if (isSimulated) {
-        // Simulate response delay
         await new Promise((r) => setTimeout(r, 600));
         if (username === 'admin' && password === 'admin123') {
           const mockUser = { id: '1', name: 'admin', role: 'ADMIN', shift: 'FULLTIME' };
@@ -81,7 +80,7 @@ export default function useGymApi() {
     }
   }, [isSimulated]);
 
-  // Fetch plans (manual refetch)
+  // Fetch plans
   const fetchPlans = useCallback(async () => {
     if (isSimulated) return MOCK_PLANS;
     setIsLoading(true);
@@ -100,70 +99,40 @@ export default function useGymApi() {
     }
   }, [isSimulated]);
 
-  // Register Member and create Subscription workflow (Step 1 & 2)
-  const createSubscription = useCallback(async (memberData, subscriptionData) => {
+  // Separate Action 1: Register Member Profile (sends POST to /api/members)
+  const registerMember = useCallback(async (memberData) => {
     setIsLoading(true);
     setError(null);
     try {
-      let finalMemberID = '';
-      let memberName = memberData.fullName;
-
       if (isSimulated) {
-        await new Promise((r) => setTimeout(r, 1000));
-        finalMemberID = String(Math.floor(Math.random() * 1000) + 12);
+        await new Promise((r) => setTimeout(r, 800));
+        const mockID = String(Math.floor(Math.random() * 1000) + 12);
+        return {
+          memberID: mockID,
+          fullName: memberData.fullName,
+          phoneNumber: memberData.phoneNumber,
+          dob: memberData.dob,
+          gender: memberData.gender,
+        };
       } else {
-        // Step 1: Create Member
-        const memberRes = await fetch('/api/members', {
+        const res = await fetch('/api/members', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(memberData),
         });
-        if (!memberRes.ok) {
+        if (!res.ok) {
           throw new Error('Failed to register member profile');
         }
-        const memberObj = await memberRes.json();
-        finalMemberID = String(memberObj.memberID || memberObj.id);
-        memberName = memberObj.fullName || memberName;
+        const data = await res.json();
+        // Backend could return memberID or id
+        return {
+          memberID: String(data.memberID || data.id),
+          fullName: data.fullName,
+          phoneNumber: data.phoneNumber,
+          dob: data.dob,
+          gender: data.gender,
+        };
       }
-
-      // Step 2: Create Subscription
-      const subPayload = {
-        memberID: finalMemberID,
-        planID: subscriptionData.planID,
-        startDate: subscriptionData.startDate,
-        discount: Number(subscriptionData.discount),
-        paymentMethod: subscriptionData.paymentMethod,
-      };
-
-      let subscriptionId = '';
-      let paymentID = '';
-
-      if (isSimulated) {
-        subscriptionId = String(Math.floor(Math.random() * 1000) + 50);
-        paymentID = `pay-${subscriptionId}`;
-      } else {
-        const subRes = await fetch('/api/memberships', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(subPayload),
-        });
-        if (!subRes.ok) {
-          throw new Error('Failed to create membership subscription');
-        }
-        const subObj = await subRes.json();
-        subscriptionId = String(subObj.membershipID || subObj.id);
-        paymentID = String(subObj.paymentID || subObj.payment?.id || `pay-${subscriptionId}`);
-      }
-
-      return {
-        memberID: finalMemberID,
-        memberName,
-        membershipID: subscriptionId,
-        paymentID: paymentID,
-        planID: subscriptionData.planID,
-        discount: subPayload.discount,
-        paymentMethod: subPayload.paymentMethod,
-      };
     } catch (err) {
       setError(err.message);
       throw err;
@@ -172,14 +141,68 @@ export default function useGymApi() {
     }
   }, [isSimulated]);
 
-  // Confirm Payment (Step 4)
+  // Separate Action 2: Create Subscription (sends POST to /api/memberships)
+  const createMembership = useCallback(async (subscriptionData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const subPayload = {
+        memberID: subscriptionData.memberID,
+        planID: subscriptionData.planID,
+        startDate: subscriptionData.startDate,
+        discount: Number(subscriptionData.discount),
+        paymentMethod: subscriptionData.paymentMethod,
+      };
+
+      if (isSimulated) {
+        await new Promise((r) => setTimeout(r, 800));
+        const mockSubID = String(Math.floor(Math.random() * 1000) + 50);
+        return {
+          memberID: subscriptionData.memberID,
+          memberName: subscriptionData.memberName,
+          membershipID: mockSubID,
+          paymentID: `pay-${mockSubID}`,
+          planID: subscriptionData.planID,
+          discount: subPayload.discount,
+          paymentMethod: subPayload.paymentMethod,
+        };
+      } else {
+        const res = await fetch('/api/memberships', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subPayload),
+        });
+        if (!res.ok) {
+          throw new Error('Failed to create membership subscription');
+        }
+        const data = await res.json();
+        const subID = String(data.membershipID || data.id);
+        const payID = String(data.paymentID || data.payment?.id || `pay-${subID}`);
+        return {
+          memberID: subscriptionData.memberID,
+          memberName: subscriptionData.memberName,
+          membershipID: subID,
+          paymentID: payID,
+          planID: subscriptionData.planID,
+          discount: subPayload.discount,
+          paymentMethod: subPayload.paymentMethod,
+        };
+      }
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isSimulated]);
+
+  // Confirm Payment (sends POST to /api/payments/{id}/process)
   const confirmPayment = useCallback(async (paymentID, paymentMethod) => {
     setIsLoading(true);
     setError(null);
     try {
       if (isSimulated) {
-        await new Promise((r) => setTimeout(r, 1200));
-        // Success mockup
+        await new Promise((r) => setTimeout(r, 1000));
         return { success: true, paymentID };
       } else {
         const res = await fetch(`/api/payments/${paymentID}/process`, {
@@ -233,7 +256,8 @@ export default function useGymApi() {
     error,
     login,
     fetchPlans,
-    createSubscription,
+    registerMember,
+    createMembership,
     confirmPayment,
     commitNewSubscriber,
     logout,

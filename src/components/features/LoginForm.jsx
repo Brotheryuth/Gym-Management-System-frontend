@@ -37,7 +37,7 @@ export default function LoginForm({ onLogin, onBypass, isLoading, error }) {
           </div>
 
           <div className="login-tip-banner">
-            🔑 Log in with ID: <strong>admin</strong> & Pass: <strong>admin123</strong>
+            Terminal Access Info - Username: <strong>admin</strong> | Password: <strong>admin123</strong>
           </div>
 
           {(error || validationError) && (
@@ -89,7 +89,7 @@ export default function LoginForm({ onLogin, onBypass, isLoading, error }) {
               disabled={isLoading}
               style={{ marginTop: '12px' }}
             >
-              ⚡ Bypass Login (Dev Mode)
+              Bypass Login (Developer Mode)
             </Button>
           )}
         </form>

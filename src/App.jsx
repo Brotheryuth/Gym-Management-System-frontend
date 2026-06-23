@@ -29,7 +29,8 @@ export default function App() {
     isLoading,
     error: apiError,
     login,
-    createSubscription,
+    registerMember,
+    createMembership,
     confirmPayment,
     commitNewSubscriber,
     logout,
@@ -38,7 +39,10 @@ export default function App() {
 
   const [form, setForm] = useState(DEFAULT_FORM_STATE);
   const [errors, setErrors] = useState({});
-  const [isSubmitAttempted, setIsSubmitAttempted] = useState(false);
+  const [isFormLoading, setIsFormLoading] = useState(false);
+
+  // Redesign state tracking split workflow
+  const [registeredMember, setRegisteredMember] = useState(null);
 
   // Modal and Receipt step flows
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -54,7 +58,7 @@ export default function App() {
   }, [plans]);
 
   // Real-time single field validation
-  const validateField = (field, value, currentForm) => {
+  const validateField = (field, value) => {
     let errMessage = '';
     
     if (field === 'fullName') {
@@ -71,7 +75,7 @@ export default function App() {
       if (!cleanPhone) {
         errMessage = 'Phone number is required';
       } else if (!phoneRegex.test(cleanPhone)) {
-        errMessage = 'Enter a valid digits sequence (9 to 11 numbers)';
+        errMessage = 'Enter a valid digit sequence (9 to 11 numbers)';
       }
     }
 
@@ -108,19 +112,20 @@ export default function App() {
   const handleFormChange = (field, value) => {
     setForm(prev => {
       const updated = { ...prev, [field]: value };
-      // Only do real-time checks for form inputs (Step 1 and Step 2 fields)
       if (['fullName', 'phoneNumber', 'dob', 'discount'].includes(field)) {
-        validateField(field, value, updated);
+        validateField(field, value);
       }
       return updated;
     });
   };
 
-  // Validate the whole form before step 3
-  const validateForm = () => {
+  // Validate Step 1 Profile Fields
+  const validateProfileForm = () => {
     const newErrors = {};
     if (!form.fullName.trim()) newErrors.fullName = 'Full name is required';
-    if (form.fullName.trim().length > 0 && form.fullName.trim().length < 2) newErrors.fullName = 'Name is too short';
+    if (form.fullName.trim().length > 0 && form.fullName.trim().length < 2) {
+      newErrors.fullName = 'Name must be at least 2 characters long';
+    }
     
     const phoneRegex = /^\d{9,11}$/;
     if (!form.phoneNumber.trim()) {
@@ -130,23 +135,35 @@ export default function App() {
     }
 
     if (!form.dob) newErrors.dob = 'Date of birth is required';
-    
-    const discountVal = Number(form.discount);
-    if (isNaN(discountVal) || discountVal < 0 || discountVal > 100) {
-      newErrors.discount = 'Discount range is 0 to 100';
-    }
 
-    setErrors(newErrors);
+    setErrors(prev => ({ ...prev, ...newErrors }));
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle Form Submission (Step 1 & 2 -> Submit to API)
-  const handleRegisterSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitAttempted(true);
-    setPaymentError('');
+  // Validate Step 2 Billing Fields
+  const validateBillingForm = () => {
+    const newErrors = {};
+    if (!form.planID) newErrors.planID = 'Please select a gym plan';
+    
+    const discountVal = Number(form.discount);
+    if (isNaN(discountVal) || discountVal < 0 || discountVal > 100) {
+      newErrors.discount = 'Discount must be between 0 and 100';
+    }
 
-    if (!validateForm()) return;
+    if (!form.paymentMethod) newErrors.paymentMethod = 'Please select a gateway';
+
+    setErrors(prev => ({ ...prev, ...newErrors }));
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Step 1: Submit Profile to API (/api/members)
+  const handleRegisterMember = async () => {
+    setIsFormLoading(true);
+    setErrors({});
+    if (!validateProfileForm()) {
+      setIsFormLoading(false);
+      return;
+    }
 
     try {
       const memberPayload = {
@@ -156,29 +173,46 @@ export default function App() {
         gender: form.gender
       };
 
+      const response = await registerMember(memberPayload);
+      setRegisteredMember(response);
+    } catch (err) {
+      // Error is caught and displayed through hook error
+    } finally {
+      setIsFormLoading(false);
+    }
+  };
+
+  // Step 2: Submit Subscription to API (/api/memberships)
+  const handleCreateMembership = async (e) => {
+    if (e) e.preventDefault();
+    setPaymentError('');
+    if (!registeredMember) return;
+    if (!validateBillingForm()) return;
+
+    try {
       const subscriptionPayload = {
+        memberID: registeredMember.memberID,
+        memberName: registeredMember.fullName,
         planID: form.planID,
         startDate: form.startDate,
         discount: Number(form.discount),
         paymentMethod: form.paymentMethod
       };
 
-      const response = await createSubscription(memberPayload, subscriptionPayload);
-      
-      // Store response details & launch interactive payment overlay
+      const response = await createMembership(subscriptionPayload);
       setPendingSubscription({
         ...response,
-        phoneNumber: form.phoneNumber,
-        dob: form.dob,
-        gender: form.gender
+        phoneNumber: registeredMember.phoneNumber,
+        dob: registeredMember.dob,
+        gender: registeredMember.gender
       });
       setIsPaymentOpen(true);
     } catch (err) {
-      // API error shows automatically in hook state or local toast
+      // Error is handled
     }
   };
 
-  // Handle Dynamic Payment Method Changes *on-the-fly* inside the modal
+  // Handle gateway recovery switches inside the overlay modal
   const handlePaymentMethodChange = (newMethod) => {
     setPendingSubscription(prev => {
       if (!prev) return null;
@@ -187,7 +221,7 @@ export default function App() {
     setPaymentError('');
   };
 
-  // Handle Confirm Payment (Step 4 -> process payment API)
+  // Confirm payment success (Step 4 -> process payment API)
   const handleConfirmPayment = async () => {
     if (!pendingSubscription) return;
     setPaymentError('');
@@ -195,7 +229,6 @@ export default function App() {
     try {
       await confirmPayment(pendingSubscription.paymentID, pendingSubscription.paymentMethod);
       
-      // Compute final pricing details
       const selectedPlanObj = plans.find(p => String(p.planID) === String(pendingSubscription.planID));
       const basePrice = selectedPlanObj ? Number(selectedPlanObj.planPrice) : 0;
       const finalAmount = Math.max(0, basePrice - (basePrice * Number(pendingSubscription.discount)) / 100);
@@ -206,10 +239,10 @@ export default function App() {
         startDate: form.startDate
       };
 
-      // Instantly inject into recent members feed (State persistence / DRY)
+      // Add record to left/sidebar logs
       commitNewSubscriber(receiptPayload, selectedPlanObj);
 
-      // Transition to Success & Receipt screen
+      // Advance to success view
       setActiveReceipt(receiptPayload);
       setIsPaymentOpen(false);
       setPendingSubscription(null);
@@ -218,10 +251,10 @@ export default function App() {
     }
   };
 
-  // Reset work space for next cashier workflow (Step 5 -> reset)
+  // Reset workspace
   const handleResetFlow = () => {
     setActiveReceipt(null);
-    setIsSubmitAttempted(false);
+    setRegisteredMember(null);
     setErrors({});
     setForm(prev => ({
       ...DEFAULT_FORM_STATE,
@@ -230,7 +263,6 @@ export default function App() {
     }));
   };
 
-  // Render Login page if not authenticated
   if (!cashier) {
     return (
       <LoginForm
@@ -242,112 +274,169 @@ export default function App() {
     );
   }
 
-  // Look up selected plan data to show pricing
+  // Live total calculations
   const currentPlan = plans.find(p => String(p.planID) === String(form.planID));
   const basePrice = currentPlan ? Number(currentPlan.planPrice) : 0;
   const finalPrice = Math.max(0, basePrice - (basePrice * (Number(form.discount) || 0)) / 100);
 
   return (
-    <div className="app-container">
-      {/* Header section */}
-      <header className="dashboard-header">
-        <div className="brand-section">
-          <div className="brand-logo-glow">G</div>
-          <div className="brand-title">Gym<span>Management</span></div>
+    <div className="app-shell">
+      {/* Left Sidebar Category Menu */}
+      <aside className="app-sidebar">
+        <div className="sidebar-brand">
+          <div className="sidebar-logo">G</div>
+          <div className="sidebar-title">Gym<span>Management</span></div>
         </div>
-        
-        <div className="header-meta">
-          <div className={`status-badge ${isSimulated ? 'simulated' : 'connected'}`}>
-            <span style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: isSimulated ? 'var(--accent-orange)' : 'var(--color-success)',
-              display: 'inline-block'
-            }} />
-            {isSimulated ? 'Simulation Active' : 'System Connected'}
+
+        <nav className="sidebar-nav">
+          <button type="button" className="nav-item active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
+              <rect x="3" y="3" width="7" height="9"></rect>
+              <rect x="14" y="3" width="7" height="5"></rect>
+              <rect x="14" y="12" width="7" height="9"></rect>
+              <rect x="3" y="16" width="7" height="5"></rect>
+            </svg>
+            Cashier Terminal
+          </button>
+          
+          <button type="button" className="nav-item" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Members Directory
+          </button>
+          
+          <button type="button" className="nav-item" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            Billing Ledger
+          </button>
+          
+          <button type="button" className="nav-item" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Gym Settings
+          </button>
+        </nav>
+
+        <div className="sidebar-footer">
+          Terminal Console v1.0.0
+        </div>
+      </aside>
+
+      {/* Main Content Workspace Layout */}
+      <div className="main-layout">
+        {/* Top bar header */}
+        <header className="dashboard-header">
+          <h2 className="header-title">Cashier Terminal</h2>
+          
+          <div className="header-meta">
+            <div className={`status-badge ${isSimulated ? 'simulated' : 'connected'}`}>
+              <span style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: isSimulated ? '#64748b' : 'var(--color-success)',
+                display: 'inline-block'
+              }} />
+              {isSimulated ? 'Simulation Active' : 'System Connected'}
+            </div>
+
+            <div className="user-info">
+              Cashier: <strong>{cashier.name}</strong> | Shift: <strong>{cashier.shift}</strong>
+            </div>
+
+            <Button
+              variant="ghost"
+              onClick={logout}
+              style={{ minHeight: '36px', padding: '6px 12px', width: 'auto', fontWeight: 600 }}
+            >
+              Sign Out
+            </Button>
+          </div>
+        </header>
+
+        {/* Form area grid */}
+        <div className="dashboard-grid">
+          <div className="workspace-left">
+            {activeReceipt ? (
+              <ReceiptCard
+                receiptData={activeReceipt}
+                planDetails={plans.find(p => String(p.planID) === String(activeReceipt.planID))}
+                onReset={handleResetFlow}
+              />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                
+                {apiError && (
+                  <div style={{
+                    backgroundColor: 'var(--color-error-bg)',
+                    border: '1.5px solid var(--color-error)',
+                    color: 'var(--color-error)',
+                    padding: '16px',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: '14px',
+                    fontWeight: 600
+                  }}>
+                    Server Error: {apiError}
+                  </div>
+                )}
+
+                {/* Step 1 Component */}
+                <MemberForm
+                  formData={form}
+                  errors={errors}
+                  onChange={handleFormChange}
+                  onRegister={handleRegisterMember}
+                  registeredMember={registeredMember}
+                  isLoading={isFormLoading}
+                />
+
+                {/* Step 2 Component */}
+                <PlanSelection
+                  plans={plans}
+                  selectedPlanID={form.planID}
+                  discount={form.discount}
+                  paymentMethod={form.paymentMethod}
+                  startDate={form.startDate}
+                  errors={errors}
+                  onChange={handleFormChange}
+                  registeredMember={registeredMember}
+                />
+
+                {/* Step 2 process button - only enabled once registeredMember is set */}
+                {registeredMember && (
+                  <Button
+                    type="button"
+                    onClick={handleCreateMembership}
+                    loading={isLoading}
+                    style={{ fontSize: '16px' }}
+                  >
+                    Create Membership & Process Payment (${finalPrice.toFixed(2)})
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
-          <div className="user-info">
-            Cashier: <strong>{cashier.name}</strong> | Shift: <strong>{cashier.shift}</strong>
-          </div>
-
-          <Button
-            variant="ghost"
-            onClick={logout}
-            style={{ minHeight: '36px', padding: '6px 12px', width: 'auto', fontWeight: 600 }}
-          >
-            Sign Out
-          </Button>
-        </div>
-      </header>
-
-      {/* Main workspace */}
-      <main className="dashboard-grid">
-        <div className="workspace-left">
-          {activeReceipt ? (
-            <ReceiptCard
-              receiptData={activeReceipt}
-              planDetails={plans.find(p => String(p.planID) === String(activeReceipt.planID))}
-              onReset={handleResetFlow}
+          {/* Sidebar Registrations */}
+          <div className="workspace-right">
+            <RecentMembersList
+              members={recentMembers}
+              isLoading={isLoading && recentMembers.length === 0}
             />
-          ) : (
-            <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              
-              {apiError && (
-                <div style={{
-                  backgroundColor: 'var(--color-error-bg)',
-                  border: '1.5px solid var(--color-error)',
-                  color: 'var(--color-error)',
-                  padding: '16px',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '14px',
-                  fontWeight: 600
-                }}>
-                  🚨 Server Error: {apiError}
-                </div>
-              )}
-
-              {/* Step 1 Component */}
-              <MemberForm
-                formData={form}
-                errors={errors}
-                onChange={handleFormChange}
-              />
-
-              {/* Step 2 Component */}
-              <PlanSelection
-                plans={plans}
-                selectedPlanID={form.planID}
-                discount={form.discount}
-                paymentMethod={form.paymentMethod}
-                startDate={form.startDate}
-                errors={errors}
-                onChange={handleFormChange}
-              />
-
-              {/* Checkout activation button */}
-              <Button
-                type="submit"
-                loading={isLoading}
-                style={{ fontSize: '16px' }}
-              >
-                Register Member & Process payment (${finalPrice.toFixed(2)})
-              </Button>
-            </form>
-          )}
+          </div>
         </div>
+      </div>
 
-        {/* Recent member logs sidebar */}
-        <div className="workspace-right">
-          <RecentMembersList
-            members={recentMembers}
-            isLoading={isLoading && recentMembers.length === 0}
-          />
-        </div>
-      </main>
-
-      {/* Steps 3 & 4 Interactive overlay modal */}
+      {/* Payment Confirmation Modal Overlay */}
       {pendingSubscription && (
         <PaymentModal
           isOpen={isPaymentOpen}
