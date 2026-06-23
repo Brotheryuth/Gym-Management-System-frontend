@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import useGymApi from './hooks/useGymApi';
 import LoginForm from './components/features/LoginForm';
-import MemberForm from './components/features/MemberForm';
-import PlanSelection from './components/features/PlanSelection';
 import PaymentModal from './components/features/PaymentModal';
-import ReceiptCard from './components/features/ReceiptCard';
-import Button from './components/ui/Button';
+import Sidebar from './components/layout/Sidebar';
+import Header from './components/layout/Header';
+import DashboardOverview from './components/features/DashboardOverview';
+import RegistrationWorkflow from './components/features/RegistrationWorkflow';
 import './App.css';
 
 const DEFAULT_FORM_STATE = {
@@ -280,292 +280,41 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      {/* Redesigned Left Sidebar - Crisp light energy theme */}
-      <aside className="app-sidebar">
-        <div className="sidebar-brand">
-          <div className="sidebar-logo">G</div>
-          <div className="sidebar-title">Gym<span>Management</span></div>
-        </div>
+      <Sidebar activeView={activeView} setActiveView={setActiveView} />
 
-        <nav className="sidebar-nav">
-          <button 
-            type="button" 
-            className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveView('dashboard')}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
-              <rect x="3" y="3" width="7" height="9"></rect>
-              <rect x="14" y="3" width="7" height="5"></rect>
-              <rect x="14" y="12" width="7" height="9"></rect>
-              <rect x="3" y="16" width="7" height="5"></rect>
-            </svg>
-            Dashboard Overview
-          </button>
-          
-          <button 
-            type="button" 
-            className={`nav-item ${activeView === 'register' ? 'active' : ''}`}
-            onClick={() => setActiveView('register')}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
-              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="8.5" cy="7" r="4"></circle>
-              <line x1="20" y1="8" x2="20" y2="14"></line>
-              <line x1="17" y1="11" x2="23" y2="11"></line>
-            </svg>
-            Register Member
-          </button>
-          
-          <button type="button" className="nav-item" disabled style={{ opacity: 0.4, cursor: 'not-allowed' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
-              <line x1="12" y1="1" x2="12" y2="23"></line>
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-            </svg>
-            Billing Ledger
-          </button>
-          
-          <button type="button" className="nav-item" disabled style={{ opacity: 0.4, cursor: 'not-allowed' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-            Gym Settings
-          </button>
-        </nav>
-
-        <div className="sidebar-footer">
-          Terminal Console v1.0.0
-        </div>
-      </aside>
-
-      {/* Main Workspace Layout */}
       <div className="main-layout">
-        {/* Header bar */}
-        <header className="dashboard-header">
-          <h2 className="header-title">
-            {activeView === 'dashboard' ? 'Dashboard Overview' : 'Register Member'}
-          </h2>
-          
-          <div className="header-meta">
-            <div className={`status-badge ${isSimulated ? 'simulated' : 'connected'}`}>
-              <span style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: isSimulated ? '#64748b' : 'var(--color-success)',
-                display: 'inline-block'
-              }} />
-              {isSimulated ? 'Simulation Active' : 'System Connected'}
-            </div>
+        <Header
+          activeView={activeView}
+          isSimulated={isSimulated}
+          cashier={cashier}
+          logout={logout}
+        />
 
-            <div className="user-info">
-              Cashier: <strong>{cashier.name}</strong> | Shift: <strong>{cashier.shift}</strong>
-            </div>
-
-            <Button
-              variant="ghost"
-              onClick={logout}
-              style={{ minHeight: '36px', padding: '6px 12px', width: 'auto', fontWeight: 600 }}
-            >
-              Sign Out
-            </Button>
-          </div>
-        </header>
-
-        {/* Dynamic Landing Panels based on activeView state */}
         {activeView === 'dashboard' ? (
-          <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr' }}>
-            <div className="workspace-left">
-              {/* Summary Stats Grid */}
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div>
-                    <div className="stat-label">Active Members</div>
-                    <div className="stat-value">{recentMembers.length + 142}</div>
-                  </div>
-                  <div className="stat-icon-wrapper" style={{ color: 'var(--accent-indigo)', backgroundColor: 'var(--accent-indigo-light)' }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="9" cy="7" r="4"></circle>
-                    </svg>
-                  </div>
-                </div>
-
-                <div className="stat-card">
-                  <div>
-                    <div className="stat-label">Shift Sales</div>
-                    <div className="stat-value">$1,420.00</div>
-                  </div>
-                  <div className="stat-icon-wrapper" style={{ color: 'var(--accent-teal)', backgroundColor: 'var(--accent-teal-light)' }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <line x1="12" y1="1" x2="12" y2="23"></line>
-                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                    </svg>
-                  </div>
-                </div>
-
-                <div className="stat-card">
-                  <div>
-                    <div className="stat-label">Active Gateway</div>
-                    <div className="stat-value">KHQR Active</div>
-                  </div>
-                  <div className="stat-icon-wrapper" style={{ color: 'var(--accent-orange)', backgroundColor: 'var(--accent-orange-light)' }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <rect x="3" y="3" width="7" height="7"></rect>
-                      <rect x="14" y="3" width="7" height="7"></rect>
-                      <rect x="14" y="14" width="7" height="7"></rect>
-                      <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Command Welcome Card with Direct Registration Button */}
-              <div className="command-center-box">
-                <div className="command-info-group">
-                  <h3>Welcome to the Cashier Dashboard</h3>
-                  <p>Process customer entries, track transaction totals, and create memberships.</p>
-                </div>
-                
-                <Button
-                  onClick={() => setActiveView('register')}
-                  style={{ width: 'auto', minWidth: '200px' }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '8px', verticalAlign: 'middle' }}>
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="8.5" cy="7" r="4"></circle>
-                    <line x1="20" y1="8" x2="20" y2="14"></line>
-                    <line x1="17" y1="11" x2="23" y2="11"></line>
-                  </svg>
-                  Register Member
-                </Button>
-              </div>
-
-              {/* Database List Table */}
-              <div className="dashboard-table-card">
-                <div className="table-title-area">
-                  <h3 className="table-title">Recent Gym Registrations</h3>
-                </div>
-                
-                <div className="dashboard-table-container">
-                  <table className="dashboard-table">
-                    <thead>
-                      <tr>
-                        <th>Member Name</th>
-                        <th>Phone Number</th>
-                        <th>Gender</th>
-                        <th>Plan Name</th>
-                        <th>Account Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentMembers.map((m) => (
-                        <tr key={m.id}>
-                          <td style={{ fontWeight: 700 }}>{m.fullName}</td>
-                          <td>{m.phoneNumber}</td>
-                          <td>{m.gender}</td>
-                          <td>
-                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
-                              {m.planName}
-                            </span>
-                          </td>
-                          <td>
-                            <span className="member-status-tag">{m.status}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
+          <DashboardOverview
+            recentMembers={recentMembers}
+            setActiveView={setActiveView}
+          />
         ) : (
-          <div className="dashboard-grid">
-            <div className="workspace-left">
-              {/* Back CTA Button */}
-              <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '8px' }}>
-                <Button 
-                  variant="secondary"
-                  onClick={handleResetFlow}
-                  style={{ width: 'auto', minHeight: '38px', padding: '6px 16px', fontSize: '13px' }}
-                >
-                  Back to Dashboard
-                </Button>
-              </div>
-
-              {activeReceipt ? (
-                <ReceiptCard
-                  receiptData={activeReceipt}
-                  planDetails={plans.find(p => String(p.planID) === String(activeReceipt.planID))}
-                  onReset={handleResetFlow}
-                />
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  
-                  {apiError && (
-                    <div style={{
-                      backgroundColor: 'var(--color-error-bg)',
-                      border: '1.5px solid var(--color-error)',
-                      color: 'var(--color-error)',
-                      padding: '16px',
-                      borderRadius: 'var(--radius-md)',
-                      fontSize: '14px',
-                      fontWeight: 600
-                    }}>
-                      Server Error: {apiError}
-                    </div>
-                  )}
-
-                  {/* Step 1 Profile registration */}
-                  <MemberForm
-                    formData={form}
-                    errors={errors}
-                    onChange={handleFormChange}
-                    onRegister={handleRegisterMember}
-                    registeredMember={registeredMember}
-                    isLoading={isFormLoading}
-                  />
-
-                  {/* Step 2 Billing setup */}
-                  <PlanSelection
-                    plans={plans}
-                    selectedPlanID={form.planID}
-                    discount={form.discount}
-                    paymentMethod={form.paymentMethod}
-                    startDate={form.startDate}
-                    errors={errors}
-                    onChange={handleFormChange}
-                    registeredMember={registeredMember}
-                  />
-
-                  {/* Step 2 Checkout activation button */}
-                  {registeredMember && (
-                    <Button
-                      type="button"
-                      onClick={handleCreateMembership}
-                      loading={isLoading}
-                      style={{ fontSize: '16px' }}
-                    >
-                      Create Membership & Process Payment (${finalPrice.toFixed(2)})
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Sidebar list logs preview */}
-            <div className="workspace-right" style={{ paddingTop: activeReceipt ? '0' : '46px' }}>
-              <RecentMembersList
-                members={recentMembers}
-                isLoading={isLoading && recentMembers.length === 0}
-              />
-            </div>
-          </div>
+          <RegistrationWorkflow
+            form={form}
+            errors={errors}
+            handleFormChange={handleFormChange}
+            handleRegisterMember={handleRegisterMember}
+            registeredMember={registeredMember}
+            isFormLoading={isFormLoading}
+            plans={plans}
+            handleCreateMembership={handleCreateMembership}
+            isLoading={isLoading}
+            finalPrice={finalPrice}
+            activeReceipt={activeReceipt}
+            handleResetFlow={handleResetFlow}
+            recentMembers={recentMembers}
+            apiError={apiError}
+          />
         )}
       </div>
 
-      {/* Confirmation modal */}
       {pendingSubscription && (
         <PaymentModal
           isOpen={isPaymentOpen}
