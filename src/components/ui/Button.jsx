@@ -58,6 +58,15 @@ export default function Button({
       };
     }
 
+    if (variant === 'outline') {
+      return {
+        ...base,
+        backgroundColor: 'transparent',
+        border: '1.5px solid var(--accent-blue)',
+        color: 'var(--accent-blue)',
+      };
+    }
+
     if (variant === 'danger') {
       return {
         ...base,
@@ -99,6 +108,14 @@ export default function Button({
           transform: translateY(-1px);
         }
         .btn-primary:not(:disabled):active {
+          transform: translateY(0);
+        }
+        .btn-outline:not(:disabled):hover {
+          background-color: var(--accent-blue) !important;
+          color: #ffffff !important;
+          transform: translateY(-1px);
+        }
+        .btn-outline:not(:disabled):active {
           transform: translateY(0);
         }
         .btn-secondary:not(:disabled):hover {

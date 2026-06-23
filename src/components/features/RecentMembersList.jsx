@@ -30,17 +30,11 @@ export default function RecentMembersList({ members = [], isLoading }) {
           No active shift registrations yet.
         </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {members.map((member) => (
             <div
               key={member.id}
-              style={{
-                borderBottom: '1px solid var(--color-border)',
-                paddingBottom: '12px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start'
-              }}
+              className="recent-member-item"
             >
               <div>
                 <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -70,15 +64,7 @@ export default function RecentMembersList({ members = [], isLoading }) {
                 </span>
               </div>
               
-              <span style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: 'var(--color-success)',
-                backgroundColor: 'var(--color-success-bg)',
-                padding: '4px 8px',
-                borderRadius: 'var(--radius-round)',
-                border: '1px solid rgba(16, 185, 129, 0.15)'
-              }}>
+              <span className="member-status-tag">
                 {member.status}
               </span>
             </div>

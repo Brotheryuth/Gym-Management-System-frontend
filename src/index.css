@@ -2,7 +2,7 @@
 
 :root {
   /* Brand Color Palette - So Matcha (Yellow-Blue Focus) */
-  --bg-canvas: #f1f3d5; /* Ivory (Warm Light Yellow) */
+  --bg-canvas: #ffffef; /* Ivory (Warm Light Yellow) */
   --bg-surface: #ffffff; /* Pure white card panels */
   
   --bg-sidebar: #3971b8; /* Celtic Blue */
@@ -32,6 +32,11 @@
   
   /* Redesigned Border Color - Clean Soft Celtic Blue */
   --color-border: #adcdec; 
+  
+  /* Green active states */
+  --color-active-green: #1e4620;
+  --color-active-green-bg: #e7f4e8;
+  --color-active-green-border: #c2e2c5;
   
   --color-error: #ef4444;
   --color-error-bg: rgba(239, 68, 68, 0.04);

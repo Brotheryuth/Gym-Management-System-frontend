@@ -96,7 +96,11 @@ export default function DashboardOverview({ recentMembers = [], setActiveView })
               <tbody>
                 {recentMembers.map((m) => (
                   <tr key={m.id}>
-                    <td style={{ fontWeight: 700 }}>{m.fullName}</td>
+                    <td>
+                      <div className="member-name-cell">
+                        {m.fullName}
+                      </div>
+                    </td>
                     <td>{m.phoneNumber}</td>
                     <td>{m.gender}</td>
                     <td>

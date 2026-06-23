@@ -22,7 +22,7 @@ export default function Header({ activeView, isSimulated, cashier, logout }) {
             width: '8px',
             height: '8px',
             borderRadius: '50%',
-            backgroundColor: isSimulated ? '#64748b' : 'var(--color-success)',
+            backgroundColor: isSimulated ? '#64748b' : 'var(--color-active-green)',
             display: 'inline-block'
           }} />
           {isSimulated ? 'Simulation Active' : 'System Connected'}
@@ -37,6 +37,7 @@ export default function Header({ activeView, isSimulated, cashier, logout }) {
         <Button
           variant="ghost"
           onClick={logout}
+          className="logout-btn"
           style={{ minHeight: '36px', padding: '6px 12px', width: 'auto', fontWeight: 600 }}
         >
           Sign Out
