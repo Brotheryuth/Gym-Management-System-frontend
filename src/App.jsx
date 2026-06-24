@@ -23,6 +23,7 @@ export default function App() {
   const {
     plans,
     recentMembers,
+    payments,
     cashier,
     isSimulated,
     isLoading,
@@ -33,7 +34,9 @@ export default function App() {
     confirmPayment,
     commitNewSubscriber,
     logout,
-    bypassLogin
+    bypassLogin,
+    deleteMember,
+    updateMember
   } = useGymApi();
 
   const [activeView, setActiveView] = useState('dashboard');
@@ -43,6 +46,7 @@ export default function App() {
 
   // Redesign split workflow state
   const [registeredMember, setRegisteredMember] = useState(null);
+  const [editingMemberID, setEditingMemberID] = useState(null);
 
   // Modal and Receipt step flows
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -173,13 +177,60 @@ export default function App() {
         gender: form.gender
       };
 
-      const response = await registerMember(memberPayload);
+      let response;
+      if (editingMemberID) {
+        response = await updateMember(editingMemberID, memberPayload);
+        setEditingMemberID(null);
+      } else {
+        response = await registerMember(memberPayload);
+      }
       setRegisteredMember(response);
     } catch (err) {
       // API error displays through hook states
     } finally {
       setIsFormLoading(false);
     }
+  };
+
+  const handleDeleteMember = async (memberID) => {
+    if (window.confirm('Are you sure you want to delete this member profile?')) {
+      try {
+        await deleteMember(memberID);
+      } catch (err) {
+        alert('Error deleting member profile: ' + err.message);
+      }
+    }
+  };
+
+  const handleEditMember = (m) => {
+    setEditingMemberID(m.memberID);
+    setRegisteredMember(null);
+    setForm(prev => ({
+      ...prev,
+      fullName: m.fullName,
+      phoneNumber: m.phoneNumber,
+      dob: m.dob,
+      gender: m.gender
+    }));
+    setActiveView('register');
+  };
+
+  const handlePayPending = (membership) => {
+    const payItem = payments.find(p => String(p.membershipID) === String(membership.id) && p.status === 'PENDING');
+    if (!payItem) {
+      alert('No pending payment record found for this membership.');
+      return;
+    }
+    setPendingSubscription({
+      paymentID: payItem.id,
+      paymentMethod: payItem.method || 'KHQR',
+      memberName: membership.fullName,
+      planID: plans.find(p => p.planName === membership.planName)?.planID || (plans[0]?.planID || ''),
+      discount: payItem.discount,
+      memberID: membership.memberID,
+      membershipID: membership.id
+    });
+    setIsPaymentOpen(true);
   };
 
   // Step 2: Submit Subscription to API (/api/memberships)
@@ -254,6 +305,7 @@ export default function App() {
   const handleResetFlow = () => {
     setActiveReceipt(null);
     setRegisteredMember(null);
+    setEditingMemberID(null);
     setErrors({});
     setForm(prev => ({
       ...DEFAULT_FORM_STATE,
@@ -293,7 +345,11 @@ export default function App() {
         {activeView === 'dashboard' ? (
           <DashboardOverview
             recentMembers={recentMembers}
+            payments={payments}
             setActiveView={setActiveView}
+            onDeleteMember={handleDeleteMember}
+            onEditMember={handleEditMember}
+            onPayPending={handlePayPending}
           />
         ) : (
           <RegistrationWorkflow
@@ -311,6 +367,7 @@ export default function App() {
             handleResetFlow={handleResetFlow}
             recentMembers={recentMembers}
             apiError={apiError}
+            isEditing={!!editingMemberID}
           />
         )}
       </div>

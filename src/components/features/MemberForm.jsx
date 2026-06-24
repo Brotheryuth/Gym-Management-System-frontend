@@ -15,7 +15,8 @@ export default function MemberForm({
   onChange, 
   onRegister, 
   registeredMember, 
-  isLoading 
+  isLoading,
+  isEditing
 }) {
   return (
     <Card>
@@ -99,7 +100,7 @@ export default function MemberForm({
           loading={isLoading}
           style={{ marginTop: '12px' }}
         >
-          Register Member Profile
+          {isEditing ? 'Update Member Profile' : 'Register Member Profile'}
         </Button>
       )}
     </Card>

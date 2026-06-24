@@ -124,7 +124,7 @@ export default function Button({
         .btn-danger:not(:disabled):hover {
           background-color: var(--color-error-bg) !important;
         }
-        .btn-ghost:not(:disabled):hover {
+        .btn-ghost:not(.logout-btn):not(:disabled):hover {
           background-color: var(--bg-canvas) !important;
           color: var(--text-primary) !important;
         }

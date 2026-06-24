@@ -37,7 +37,8 @@ export default function RegistrationWorkflow({
   activeReceipt,
   handleResetFlow,
   recentMembers = [],
-  apiError
+  apiError,
+  isEditing
 }) {
   return (
     <div className="dashboard-grid">
@@ -84,6 +85,7 @@ export default function RegistrationWorkflow({
               onRegister={handleRegisterMember}
               registeredMember={registeredMember}
               isLoading={isFormLoading}
+              isEditing={isEditing}
             />
 
             {/* Step 2 Billing setup */}

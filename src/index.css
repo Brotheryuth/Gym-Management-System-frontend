@@ -2,7 +2,7 @@
 
 :root {
   /* Brand Color Palette - So Matcha (Yellow-Blue Focus) */
-  --bg-canvas: #ffffef; /* Ivory (Warm Light Yellow) */
+  --bg-canvas: hsl(60, 100%, 98%); /* Ivory (Warm Light Yellow) */
   --bg-surface: #ffffff; /* Pure white card panels */
   
   --bg-sidebar: #3971b8; /* Celtic Blue */
@@ -34,9 +34,9 @@
   --color-border: #adcdec; 
   
   /* Green active states */
-  --color-active-green: #1e4620;
-  --color-active-green-bg: #e7f4e8;
-  --color-active-green-border: #c2e2c5;
+  --color-active-green: #166534;
+  --color-active-green-bg: #dcfce7;
+  --color-active-green-border: #86efac;
   
   --color-error: #ef4444;
   --color-error-bg: rgba(239, 68, 68, 0.04);

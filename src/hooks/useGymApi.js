@@ -1,4 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { loginApi } from '../services/authService';
+import { fetchPlansApi } from '../services/planService';
+import { registerMemberApi, updateMemberApi, deleteMemberApi } from '../services/memberService';
+import { createMembershipApi } from '../services/membershipService';
+import { confirmPaymentApi } from '../services/paymentService';
 
 // Pre-populated mockup database
 const MOCK_PLANS = [
@@ -8,17 +13,55 @@ const MOCK_PLANS = [
 ];
 
 const MOCK_MEMBERS = [
-  { id: '10', fullName: 'John Doe', phoneNumber: '012345678', dob: '1990-05-15', gender: 'MALE', planName: 'Premium 3 Months', status: 'ACTIVE' },
-  { id: '11', fullName: 'Sarah Connor', phoneNumber: '098765432', dob: '1985-11-10', gender: 'FEMALE', planName: 'Elite Year VIP', status: 'ACTIVE' },
+  { id: '10', memberID: 'm-10', fullName: 'John Doe', phoneNumber: '012345678', dob: '1990-05-15', gender: 'MALE', planName: 'Premium 3 Months', status: 'ACTIVE', startDate: '2026-06-20', endDate: '2026-09-20' },
+  { id: '11', memberID: 'm-11', fullName: 'Sarah Connor', phoneNumber: '098765432', dob: '1985-11-10', gender: 'FEMALE', planName: 'Elite Year VIP', status: 'ACTIVE', startDate: '2026-01-01', endDate: '2027-01-01' },
+];
+
+const MOCK_PAYMENTS = [
+  { id: '200', membershipID: '10', baseAmount: 80.0, finalAmount: 80.0, discount: 0, method: 'KHQR', status: 'PAID', createAt: '2026-06-20T14:30:00', paymentDate: '2026-06-20T14:30:05' },
+  { id: '201', membershipID: '11', baseAmount: 280.0, finalAmount: 252.0, discount: 10, method: 'KHQR', status: 'PAID', createAt: '2026-06-24T10:15:00', paymentDate: '2026-06-24T10:15:10' },
 ];
 
 export default function useGymApi() {
   const [plans, setPlans] = useState(MOCK_PLANS);
   const [recentMembers, setRecentMembers] = useState(MOCK_MEMBERS);
+  const [payments, setPayments] = useState(MOCK_PAYMENTS);
   const [cashier, setCashier] = useState(null);
   const [isSimulated, setIsSimulated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Helper mapping function for Membership objects
+  const mapMemberships = useCallback((memData) => {
+    return memData.map(m => ({
+      id: m.id,
+      memberID: m.member?.id || 'N/A',
+      fullName: m.member?.fullName || 'N/A',
+      phoneNumber: m.member?.phoneNumber || 'N/A',
+      dob: m.member?.dob || 'N/A',
+      gender: m.member?.gender || 'OTHER',
+      planName: m.plan?.planName || 'N/A',
+      status: m.status || 'PENDING',
+      startDate: m.startDate || 'N/A',
+      endDate: m.endDate || 'N/A'
+    }));
+  }, []);
+
+  // Synchronize dashboard lists from backend
+  const refreshDatabase = useCallback(async () => {
+    const [memRes, payRes] = await Promise.all([
+      fetch('/api/memberships'),
+      fetch('/api/payments')
+    ]);
+    if (memRes.ok) {
+      const memData = await memRes.json();
+      setRecentMembers(mapMemberships(memData));
+    }
+    if (payRes.ok) {
+      const payData = await payRes.json();
+      setPayments(payData);
+    }
+  }, [mapMemberships]);
 
   // Auto-detect backend on mount
   useEffect(() => {
@@ -30,6 +73,7 @@ export default function useGymApi() {
           const data = await res.json();
           setPlans(data.length ? data : MOCK_PLANS);
           setIsSimulated(false);
+          await refreshDatabase();
         } else {
           setIsSimulated(true);
         }
@@ -40,38 +84,16 @@ export default function useGymApi() {
         setIsLoading(false);
       }
     }
-
     checkBackend();
-  }, []);
+  }, [refreshDatabase]);
 
-  // Login action
   const login = useCallback(async (username, password) => {
     setIsLoading(true);
     setError(null);
     try {
-      if (isSimulated) {
-        await new Promise((r) => setTimeout(r, 600));
-        if (username === 'admin' && password === 'admin123') {
-          const mockUser = { id: '1', name: 'admin', role: 'ADMIN', shift: 'FULLTIME' };
-          setCashier(mockUser);
-          return mockUser;
-        } else {
-          throw new Error('Invalid credentials. Hint: use admin/admin123');
-        }
-      } else {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identifier: username, password }),
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text || 'Login failed');
-        }
-        const data = await res.json();
-        setCashier(data);
-        return data;
-      }
+      const user = await loginApi(username, password, isSimulated);
+      setCashier(user);
+      return user;
     } catch (err) {
       setError(err.message);
       throw err;
@@ -80,15 +102,11 @@ export default function useGymApi() {
     }
   }, [isSimulated]);
 
-  // Fetch plans
   const fetchPlans = useCallback(async () => {
-    if (isSimulated) return MOCK_PLANS;
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/plans');
-      if (!res.ok) throw new Error('Failed to fetch plans');
-      const data = await res.json();
+      const data = await fetchPlansApi(isSimulated, MOCK_PLANS);
       setPlans(data);
       return data;
     } catch (err) {
@@ -99,40 +117,11 @@ export default function useGymApi() {
     }
   }, [isSimulated]);
 
-  // Separate Action 1: Register Member Profile (sends POST to /api/members)
   const registerMember = useCallback(async (memberData) => {
     setIsLoading(true);
     setError(null);
     try {
-      if (isSimulated) {
-        await new Promise((r) => setTimeout(r, 800));
-        const mockID = String(Math.floor(Math.random() * 1000) + 12);
-        return {
-          memberID: mockID,
-          fullName: memberData.fullName,
-          phoneNumber: memberData.phoneNumber,
-          dob: memberData.dob,
-          gender: memberData.gender,
-        };
-      } else {
-        const res = await fetch('/api/members', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(memberData),
-        });
-        if (!res.ok) {
-          throw new Error('Failed to register member profile');
-        }
-        const data = await res.json();
-        // Backend could return memberID or id
-        return {
-          memberID: String(data.memberID || data.id),
-          fullName: data.fullName,
-          phoneNumber: data.phoneNumber,
-          dob: data.dob,
-          gender: data.gender,
-        };
-      }
+      return await registerMemberApi(memberData, isSimulated);
     } catch (err) {
       setError(err.message);
       throw err;
@@ -141,79 +130,49 @@ export default function useGymApi() {
     }
   }, [isSimulated]);
 
-  // Separate Action 2: Create Subscription (sends POST to /api/memberships)
   const createMembership = useCallback(async (subscriptionData) => {
     setIsLoading(true);
     setError(null);
     try {
-      const subPayload = {
-        memberID: subscriptionData.memberID,
-        planID: subscriptionData.planID,
-        startDate: subscriptionData.startDate,
-        discount: Number(subscriptionData.discount),
-        paymentMethod: subscriptionData.paymentMethod,
-      };
-
-      if (isSimulated) {
-        await new Promise((r) => setTimeout(r, 800));
-        const mockSubID = String(Math.floor(Math.random() * 1000) + 50);
-        return {
-          memberID: subscriptionData.memberID,
-          memberName: subscriptionData.memberName,
-          membershipID: mockSubID,
-          paymentID: `pay-${mockSubID}`,
-          planID: subscriptionData.planID,
-          discount: subPayload.discount,
-          paymentMethod: subPayload.paymentMethod,
-        };
-      } else {
-        const res = await fetch('/api/memberships', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(subPayload),
-        });
-        if (!res.ok) {
-          throw new Error('Failed to create membership subscription');
-        }
-        const data = await res.json();
-        const subID = String(data.membershipID || data.id);
-        const payID = String(data.paymentID || data.payment?.id || `pay-${subID}`);
-        return {
-          memberID: subscriptionData.memberID,
-          memberName: subscriptionData.memberName,
-          membershipID: subID,
-          paymentID: payID,
-          planID: subscriptionData.planID,
-          discount: subPayload.discount,
-          paymentMethod: subPayload.paymentMethod,
-        };
+      const response = await createMembershipApi(subscriptionData, isSimulated);
+      if (!isSimulated) {
+        await refreshDatabase();
       }
+      return response;
     } catch (err) {
       setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, [isSimulated]);
+  }, [isSimulated, refreshDatabase]);
 
-  // Confirm Payment (sends POST to /api/payments/{id}/process)
   const confirmPayment = useCallback(async (paymentID, paymentMethod) => {
     setIsLoading(true);
     setError(null);
     try {
+      const response = await confirmPaymentApi(paymentID, paymentMethod, isSimulated);
+      if (!isSimulated) {
+        await refreshDatabase();
+      }
+      return response;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isSimulated, refreshDatabase]);
+
+  const deleteMember = useCallback(async (memberID) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await deleteMemberApi(memberID, isSimulated);
       if (isSimulated) {
-        await new Promise((r) => setTimeout(r, 1000));
-        return { success: true, paymentID };
+        setRecentMembers(prev => prev.filter(m => String(m.memberID) !== String(memberID)));
       } else {
-        const res = await fetch(`/api/payments/${paymentID}/process`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentMethod }),
-        });
-        if (!res.ok) {
-          throw new Error('Payment processing failed. Card declined or terminal error.');
-        }
-        return { success: true, paymentID };
+        await refreshDatabase();
       }
     } catch (err) {
       setError(err.message);
@@ -221,18 +180,37 @@ export default function useGymApi() {
     } finally {
       setIsLoading(false);
     }
-  }, [isSimulated]);
+  }, [isSimulated, refreshDatabase]);
 
-  // Add registered subscriber to recent dashboard log
+  const updateMember = useCallback(async (memberID, memberData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await updateMemberApi(memberID, memberData, isSimulated);
+      if (!isSimulated) {
+        await refreshDatabase();
+      }
+      return response;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isSimulated, refreshDatabase]);
+
   const commitNewSubscriber = useCallback((newSub, planDetails) => {
     const freshRecord = {
       id: newSub.memberID,
+      memberID: newSub.memberID,
       fullName: newSub.memberName,
       phoneNumber: newSub.phoneNumber || 'N/A',
       dob: newSub.dob || 'N/A',
       gender: newSub.gender || 'OTHER',
       planName: planDetails ? planDetails.planName : 'Gym Plan',
       status: 'ACTIVE',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: 'N/A'
     };
     setRecentMembers((prev) => [freshRecord, ...prev]);
   }, []);
@@ -250,6 +228,7 @@ export default function useGymApi() {
   return {
     plans,
     recentMembers,
+    payments,
     cashier,
     isSimulated,
     isLoading,
@@ -262,5 +241,7 @@ export default function useGymApi() {
     commitNewSubscriber,
     logout,
     bypassLogin,
+    deleteMember,
+    updateMember,
   };
 }
