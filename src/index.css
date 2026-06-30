@@ -34,9 +34,9 @@
   --color-border: #adcdec; 
   
   /* Green active states */
-  --color-active-green: #166534;
-  --color-active-green-bg: #dcfce7;
-  --color-active-green-border: #86efac;
+  --color-active-green: #ffffff;
+  --color-active-green-bg: #4bbe04;
+  --color-active-green-border: transparent;
   
   --color-error: #ef4444;
   --color-error-bg: rgba(239, 68, 68, 0.04);

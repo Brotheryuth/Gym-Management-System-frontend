@@ -5,29 +5,12 @@ import { registerMemberApi, updateMemberApi, deleteMemberApi } from '../services
 import { createMembershipApi } from '../services/membershipService';
 import { confirmPaymentApi } from '../services/paymentService';
 
-// Pre-populated mockup database
-const MOCK_PLANS = [
-  { planID: '1', planName: 'Standard 1 Month', planPrice: 30.0, duration: 30 },
-  { planID: '2', planName: 'Premium 3 Months', planPrice: 80.0, duration: 90 },
-  { planID: '3', planName: 'Elite Year VIP', planPrice: 280.0, duration: 365 },
-];
-
-const MOCK_MEMBERS = [
-  { id: '10', memberID: 'm-10', fullName: 'John Doe', phoneNumber: '012345678', dob: '1990-05-15', gender: 'MALE', planName: 'Premium 3 Months', status: 'ACTIVE', startDate: '2026-06-20', endDate: '2026-09-20' },
-  { id: '11', memberID: 'm-11', fullName: 'Sarah Connor', phoneNumber: '098765432', dob: '1985-11-10', gender: 'FEMALE', planName: 'Elite Year VIP', status: 'ACTIVE', startDate: '2026-01-01', endDate: '2027-01-01' },
-];
-
-const MOCK_PAYMENTS = [
-  { id: '200', membershipID: '10', baseAmount: 80.0, finalAmount: 80.0, discount: 0, method: 'KHQR', status: 'PAID', createAt: '2026-06-20T14:30:00', paymentDate: '2026-06-20T14:30:05' },
-  { id: '201', membershipID: '11', baseAmount: 280.0, finalAmount: 252.0, discount: 10, method: 'KHQR', status: 'PAID', createAt: '2026-06-24T10:15:00', paymentDate: '2026-06-24T10:15:10' },
-];
-
 export default function useGymApi() {
-  const [plans, setPlans] = useState(MOCK_PLANS);
-  const [recentMembers, setRecentMembers] = useState(MOCK_MEMBERS);
-  const [payments, setPayments] = useState(MOCK_PAYMENTS);
+  const [plans, setPlans] = useState([]);
+  const [recentMembers, setRecentMembers] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [cashier, setCashier] = useState(null);
-  const [isSimulated, setIsSimulated] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -49,17 +32,28 @@ export default function useGymApi() {
 
   // Synchronize dashboard lists from backend
   const refreshDatabase = useCallback(async () => {
-    const [memRes, payRes] = await Promise.all([
-      fetch('/api/memberships'),
-      fetch('/api/payments')
-    ]);
-    if (memRes.ok) {
-      const memData = await memRes.json();
-      setRecentMembers(mapMemberships(memData));
-    }
-    if (payRes.ok) {
-      const payData = await payRes.json();
-      setPayments(payData);
+    try {
+      const [memRes, payRes] = await Promise.all([
+        fetch('/api/memberships'),
+        fetch('/api/payments')
+      ]);
+      if (memRes.ok) {
+        const memData = await memRes.json();
+        setRecentMembers(mapMemberships(memData));
+      } else {
+        setRecentMembers([]);
+      }
+      if (payRes.ok) {
+        const payData = await payRes.json();
+        setPayments(payData);
+      } else {
+        setPayments([]);
+      }
+    } catch (err) {
+      console.warn('Failed to refresh database:', err);
+      setRecentMembers([]);
+      setPayments([]);
+      setIsOffline(true);
     }
   }, [mapMemberships]);
 
@@ -71,15 +65,21 @@ export default function useGymApi() {
         const res = await fetch('/api/plans', { signal: AbortSignal.timeout(2000) });
         if (res.ok) {
           const data = await res.json();
-          setPlans(data.length ? data : MOCK_PLANS);
-          setIsSimulated(false);
+          setPlans(data);
+          setIsOffline(false);
           await refreshDatabase();
         } else {
-          setIsSimulated(true);
+          setIsOffline(true);
+          setPlans([]);
+          setRecentMembers([]);
+          setPayments([]);
         }
       } catch (err) {
-        console.warn('Backend offline. Switched to Simulation Mode.', err);
-        setIsSimulated(true);
+        console.warn('Backend offline.', err);
+        setIsOffline(true);
+        setPlans([]);
+        setRecentMembers([]);
+        setPayments([]);
       } finally {
         setIsLoading(false);
       }
@@ -91,7 +91,7 @@ export default function useGymApi() {
     setIsLoading(true);
     setError(null);
     try {
-      const user = await loginApi(username, password, isSimulated);
+      const user = await loginApi(username, password);
       setCashier(user);
       return user;
     } catch (err) {
@@ -100,44 +100,43 @@ export default function useGymApi() {
     } finally {
       setIsLoading(false);
     }
-  }, [isSimulated]);
+  }, []);
 
   const fetchPlans = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchPlansApi(isSimulated, MOCK_PLANS);
+      const data = await fetchPlansApi();
       setPlans(data);
       return data;
     } catch (err) {
       setError(err.message);
-      return MOCK_PLANS;
+      setPlans([]);
+      return [];
     } finally {
       setIsLoading(false);
     }
-  }, [isSimulated]);
+  }, []);
 
   const registerMember = useCallback(async (memberData) => {
     setIsLoading(true);
     setError(null);
     try {
-      return await registerMemberApi(memberData, isSimulated);
+      return await registerMemberApi(memberData);
     } catch (err) {
       setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, [isSimulated]);
+  }, []);
 
   const createMembership = useCallback(async (subscriptionData) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await createMembershipApi(subscriptionData, isSimulated);
-      if (!isSimulated) {
-        await refreshDatabase();
-      }
+      const response = await createMembershipApi(subscriptionData);
+      await refreshDatabase();
       return response;
     } catch (err) {
       setError(err.message);
@@ -145,16 +144,14 @@ export default function useGymApi() {
     } finally {
       setIsLoading(false);
     }
-  }, [isSimulated, refreshDatabase]);
+  }, [refreshDatabase]);
 
   const confirmPayment = useCallback(async (paymentID, paymentMethod) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await confirmPaymentApi(paymentID, paymentMethod, isSimulated);
-      if (!isSimulated) {
-        await refreshDatabase();
-      }
+      const response = await confirmPaymentApi(paymentID, paymentMethod);
+      await refreshDatabase();
       return response;
     } catch (err) {
       setError(err.message);
@@ -162,34 +159,28 @@ export default function useGymApi() {
     } finally {
       setIsLoading(false);
     }
-  }, [isSimulated, refreshDatabase]);
+  }, [refreshDatabase]);
 
   const deleteMember = useCallback(async (memberID) => {
     setIsLoading(true);
     setError(null);
     try {
-      await deleteMemberApi(memberID, isSimulated);
-      if (isSimulated) {
-        setRecentMembers(prev => prev.filter(m => String(m.memberID) !== String(memberID)));
-      } else {
-        await refreshDatabase();
-      }
+      await deleteMemberApi(memberID);
+      await refreshDatabase();
     } catch (err) {
       setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, [isSimulated, refreshDatabase]);
+  }, [refreshDatabase]);
 
   const updateMember = useCallback(async (memberID, memberData) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await updateMemberApi(memberID, memberData, isSimulated);
-      if (!isSimulated) {
-        await refreshDatabase();
-      }
+      const response = await updateMemberApi(memberID, memberData);
+      await refreshDatabase();
       return response;
     } catch (err) {
       setError(err.message);
@@ -197,7 +188,7 @@ export default function useGymApi() {
     } finally {
       setIsLoading(false);
     }
-  }, [isSimulated, refreshDatabase]);
+  }, [refreshDatabase]);
 
   const commitNewSubscriber = useCallback((newSub, planDetails) => {
     const freshRecord = {
@@ -222,7 +213,6 @@ export default function useGymApi() {
   const bypassLogin = useCallback(() => {
     const bypassUser = { id: 'bypass-1', name: 'bypass-dev', role: 'ADMIN', shift: 'DEVELOPER' };
     setCashier(bypassUser);
-    setIsSimulated(true);
   }, []);
 
   return {
@@ -230,7 +220,7 @@ export default function useGymApi() {
     recentMembers,
     payments,
     cashier,
-    isSimulated,
+    isOffline,
     isLoading,
     error,
     login,

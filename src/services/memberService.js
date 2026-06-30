@@ -1,15 +1,4 @@
-export async function registerMemberApi(memberData, isSimulated) {
-  if (isSimulated) {
-    await new Promise((r) => setTimeout(r, 800));
-    const mockID = String(Math.floor(Math.random() * 1000) + 12);
-    return {
-      memberID: mockID,
-      fullName: memberData.fullName,
-      phoneNumber: memberData.phoneNumber,
-      dob: memberData.dob,
-      gender: memberData.gender,
-    };
-  }
+export async function registerMemberApi(memberData) {
   const res = await fetch('/api/members', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -28,11 +17,7 @@ export async function registerMemberApi(memberData, isSimulated) {
   };
 }
 
-export async function updateMemberApi(memberID, memberData, isSimulated) {
-  if (isSimulated) {
-    await new Promise((r) => setTimeout(r, 600));
-    return { memberID, ...memberData };
-  }
+export async function updateMemberApi(memberID, memberData) {
   const res = await fetch(`/api/members/${memberID}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -49,11 +34,7 @@ export async function updateMemberApi(memberID, memberData, isSimulated) {
   };
 }
 
-export async function deleteMemberApi(memberID, isSimulated) {
-  if (isSimulated) {
-    await new Promise((r) => setTimeout(r, 600));
-    return;
-  }
+export async function deleteMemberApi(memberID) {
   const res = await fetch(`/api/members/${memberID}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Failed to delete member profile');
 }

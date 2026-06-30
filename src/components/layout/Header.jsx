@@ -9,7 +9,7 @@ import Button from '../ui/Button';
  * @param {object} props.cashier - Active cashier profile details
  * @param {function} props.logout - Log out handler
  */
-export default function Header({ activeView, isSimulated, cashier, logout }) {
+export default function Header({ activeView, isOffline, cashier, logout }) {
   return (
     <header className="dashboard-header">
       <h2 className="header-title">
@@ -17,15 +17,15 @@ export default function Header({ activeView, isSimulated, cashier, logout }) {
       </h2>
       
       <div className="header-meta">
-        <div className={`status-badge ${isSimulated ? 'simulated' : 'connected'}`}>
+        <div className={`status-badge ${isOffline ? 'offline' : 'connected'}`}>
           <span style={{
             width: '8px',
             height: '8px',
             borderRadius: '50%',
-            backgroundColor: isSimulated ? '#64748b' : 'var(--color-active-green)',
+            backgroundColor: isOffline ? '#ef4444' : '#4bbe04',
             display: 'inline-block'
           }} />
-          {isSimulated ? 'Simulation Active' : 'System Connected'}
+          {isOffline ? 'System Offline' : 'System Connected'}
         </div>
 
         {cashier && (

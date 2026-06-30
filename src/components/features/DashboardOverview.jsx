@@ -142,7 +142,7 @@ export default function DashboardOverview({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+    <div className="dashboard-overview-container">
       <MetricCards
         todaySales={todaySales}
         salesChangePercent={salesChangePercent}

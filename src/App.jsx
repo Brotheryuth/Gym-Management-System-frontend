@@ -25,7 +25,7 @@ export default function App() {
     recentMembers,
     payments,
     cashier,
-    isSimulated,
+    isOffline,
     isLoading,
     error: apiError,
     login,
@@ -337,7 +337,7 @@ export default function App() {
       <div className="main-layout">
         <Header
           activeView={activeView}
-          isSimulated={isSimulated}
+          isOffline={isOffline}
           cashier={cashier}
           logout={logout}
         />

@@ -1,4 +1,4 @@
-export async function createMembershipApi(subscriptionData, isSimulated) {
+export async function createMembershipApi(subscriptionData) {
   const subPayload = {
     memberID: subscriptionData.memberID,
     planID: subscriptionData.planID,
@@ -6,20 +6,6 @@ export async function createMembershipApi(subscriptionData, isSimulated) {
     discount: Number(subscriptionData.discount),
     paymentMethod: subscriptionData.paymentMethod,
   };
-
-  if (isSimulated) {
-    await new Promise((r) => setTimeout(r, 800));
-    const mockSubID = String(Math.floor(Math.random() * 1000) + 50);
-    return {
-      memberID: subscriptionData.memberID,
-      memberName: subscriptionData.memberName,
-      membershipID: mockSubID,
-      paymentID: `pay-${mockSubID}`,
-      planID: subscriptionData.planID,
-      discount: subPayload.discount,
-      paymentMethod: subPayload.paymentMethod,
-    };
-  }
 
   const res = await fetch('/api/memberships', {
     method: 'POST',

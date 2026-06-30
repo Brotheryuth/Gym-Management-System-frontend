@@ -162,10 +162,10 @@
   border: 1.5px solid var(--color-active-green-border);
 }
 
-.status-badge.simulated {
-  background-color: var(--brand-tea-green-light);
-  color: var(--text-primary);
-  border: 1.5px solid var(--brand-tea-green-border);
+.status-badge.offline {
+  background-color: #fee2e2;
+  color: #ef4444;
+  border: 1.5px solid #fca5a5;
 }
 
 .user-info {
@@ -189,10 +189,21 @@
   flex-grow: 1;
 }
 
+.dashboard-overview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px 32px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
 @media (max-width: 1200px) {
-  .dashboard-grid {
+  .dashboard-grid, .dashboard-overview-container {
     grid-template-columns: 1fr;
     padding: 16px;
+    gap: 16px;
   }
 }
 
@@ -1014,6 +1025,7 @@ body .app-shell .main-layout .dashboard-header button.logout-btn:not(:disabled):
   border: 1.5px solid var(--color-border);
   padding: 20px;
   box-shadow: 
+    inset 0 2px 5px rgba(52, 59, 27, 0.04),
     0 1px 3px 0 rgba(52, 59, 27, 0.02),
     0 10px 15px -3px rgba(52, 59, 27, 0.03),
     0 4px 6px -2px rgba(52, 59, 27, 0.01);
@@ -1023,6 +1035,7 @@ body .app-shell .main-layout .dashboard-header button.logout-btn:not(:disabled):
 .purity-card:hover {
   transform: translateY(-2px);
   box-shadow: 
+    inset 0 1px 3px rgba(52, 59, 27, 0.02),
     0 4px 6px 0 rgba(52, 59, 27, 0.03),
     0 15px 25px -5px rgba(52, 59, 27, 0.05),
     0 8px 12px -4px rgba(52, 59, 27, 0.02);
@@ -1231,10 +1244,12 @@ body .app-shell .main-layout .dashboard-header button.logout-btn:not(:disabled):
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: inset 0 3px 8px rgba(52, 59, 27, 0.04);
 }
 
 .purity-chart-box.dark {
   background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-hover) 100%);
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Quick Stats below Chart */

@@ -1,8 +1,4 @@
-export async function confirmPaymentApi(paymentID, paymentMethod, isSimulated) {
-  if (isSimulated) {
-    await new Promise((r) => setTimeout(r, 1000));
-    return { success: true, paymentID };
-  }
+export async function confirmPaymentApi(paymentID, paymentMethod) {
   const res = await fetch(`/api/payments/${paymentID}/process`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
