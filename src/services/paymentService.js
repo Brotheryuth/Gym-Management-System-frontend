@@ -9,3 +9,11 @@ export async function confirmPaymentApi(paymentID, paymentMethod) {
   }
   return { success: true, paymentID };
 }
+
+export async function refundPaymentApi(paymentID) {
+  const res = await fetch(`/api/payments/${paymentID}/refund`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to refund payment transaction');
+  return await res.json();
+}

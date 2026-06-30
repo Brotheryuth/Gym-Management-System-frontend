@@ -82,15 +82,26 @@ export default function LoginForm({ onLogin, onBypass, isLoading, error }) {
           </Button>
 
           {onBypass && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onBypass}
-              disabled={isLoading}
-              style={{ marginTop: '12px' }}
-            >
-              Bypass Login (Developer Mode)
-            </Button>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '12px', width: '100%' }}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onBypass('ADMIN')}
+                disabled={isLoading}
+                style={{ flex: 1, padding: '8px 12px', fontSize: '13px', minHeight: '38px' }}
+              >
+                Bypass Admin
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onBypass('STAFF')}
+                disabled={isLoading}
+                style={{ flex: 1, padding: '8px 12px', fontSize: '13px', minHeight: '38px' }}
+              >
+                Bypass Staff
+              </Button>
+            </div>
           )}
         </form>
       </Card>

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loginApi } from '../services/authService';
-import { fetchPlansApi } from '../services/planService';
+import { fetchPlansApi, createPlanApi, updatePlanApi, deletePlanApi } from '../services/planService';
 import { registerMemberApi, updateMemberApi, deleteMemberApi } from '../services/memberService';
-import { createMembershipApi } from '../services/membershipService';
-import { confirmPaymentApi } from '../services/paymentService';
+import { createMembershipApi, cancelMembershipApi } from '../services/membershipService';
+import { confirmPaymentApi, refundPaymentApi } from '../services/paymentService';
 
 export default function useGymApi() {
   const [plans, setPlans] = useState([]);
@@ -210,8 +210,82 @@ export default function useGymApi() {
     setCashier(null);
   }, []);
 
-  const bypassLogin = useCallback(() => {
-    const bypassUser = { id: 'bypass-1', name: 'bypass-dev', role: 'ADMIN', shift: 'DEVELOPER' };
+  const createPlan = useCallback(async (planData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await createPlanApi(planData);
+      await fetchPlans();
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchPlans]);
+
+  const updatePlan = useCallback(async (planID, planData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await updatePlanApi(planID, planData);
+      await fetchPlans();
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchPlans]);
+
+  const deletePlan = useCallback(async (planID) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await deletePlanApi(planID);
+      await fetchPlans();
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchPlans]);
+
+  const cancelMembership = useCallback(async (membershipID) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await cancelMembershipApi(membershipID);
+      await refreshDatabase();
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [refreshDatabase]);
+
+  const refundPayment = useCallback(async (paymentID) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await refundPaymentApi(paymentID);
+      await refreshDatabase();
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [refreshDatabase]);
+
+  const bypassLogin = useCallback((role = 'ADMIN') => {
+    const bypassUser = { id: 'bypass-1', name: `bypass-${role.toLowerCase()}`, role: role, shift: 'DEVELOPER' };
     setCashier(bypassUser);
   }, []);
 
@@ -233,5 +307,10 @@ export default function useGymApi() {
     bypassLogin,
     deleteMember,
     updateMember,
+    createPlan,
+    updatePlan,
+    deletePlan,
+    cancelMembership,
+    refundPayment
   };
 }

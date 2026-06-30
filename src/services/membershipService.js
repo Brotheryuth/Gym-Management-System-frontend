@@ -29,3 +29,11 @@ export async function createMembershipApi(subscriptionData) {
     paymentMethod: subPayload.paymentMethod,
   };
 }
+
+export async function cancelMembershipApi(membershipID) {
+  const res = await fetch(`/api/memberships/${membershipID}/cancel`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to cancel membership subscription');
+  return await res.json();
+}
