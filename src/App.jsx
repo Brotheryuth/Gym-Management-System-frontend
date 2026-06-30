@@ -6,6 +6,11 @@ import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import DashboardOverview from './components/features/DashboardOverview';
 import RegistrationWorkflow from './components/features/RegistrationWorkflow';
+import MemberManagement from './components/features/MemberManagement';
+import MembershipManagement from './components/features/MembershipManagement';
+import PlanManagement from './components/features/PlanManagement';
+import BillingLedger from './components/features/BillingLedger';
+import Modal from './components/ui/Modal';
 import './App.css';
 
 const DEFAULT_FORM_STATE = {
@@ -36,13 +41,19 @@ export default function App() {
     logout,
     bypassLogin,
     deleteMember,
-    updateMember
+    updateMember,
+    createPlan,
+    updatePlan,
+    deletePlan,
+    cancelMembership,
+    refundPayment
   } = useGymApi();
 
   const [activeView, setActiveView] = useState('dashboard');
   const [form, setForm] = useState(DEFAULT_FORM_STATE);
   const [errors, setErrors] = useState({});
   const [isFormLoading, setIsFormLoading] = useState(false);
+  const [adminWarningOpen, setAdminWarningOpen] = useState(false);
 
   // Redesign split workflow state
   const [registeredMember, setRegisteredMember] = useState(null);
@@ -193,6 +204,10 @@ export default function App() {
   };
 
   const handleDeleteMember = async (memberID) => {
+    if (cashier?.role !== 'ADMIN') {
+      setAdminWarningOpen(true);
+      return;
+    }
     if (window.confirm('Are you sure you want to delete this member profile?')) {
       try {
         await deleteMember(memberID);
@@ -342,7 +357,7 @@ export default function App() {
           logout={logout}
         />
 
-        {activeView === 'dashboard' ? (
+        {activeView === 'dashboard' && (
           <DashboardOverview
             recentMembers={recentMembers}
             payments={payments}
@@ -351,7 +366,9 @@ export default function App() {
             onEditMember={handleEditMember}
             onPayPending={handlePayPending}
           />
-        ) : (
+        )}
+
+        {activeView === 'register' && (
           <RegistrationWorkflow
             form={form}
             errors={errors}
@@ -370,6 +387,60 @@ export default function App() {
             isEditing={!!editingMemberID}
           />
         )}
+
+        {activeView === 'members' && (
+          <MemberManagement
+            recentMembers={recentMembers}
+            onEditMember={handleEditMember}
+            onDeleteMember={handleDeleteMember}
+            cashier={cashier}
+            onShowAdminWarning={() => setAdminWarningOpen(true)}
+          />
+        )}
+
+        {activeView === 'memberships' && (
+          <MembershipManagement
+            recentMembers={recentMembers}
+            onPayPending={handlePayPending}
+            onCancelMembership={async (id) => {
+              try {
+                await cancelMembership(id);
+              } catch (err) {
+                alert('Error canceling membership: ' + err.message);
+              }
+            }}
+            cashier={cashier}
+            onShowAdminWarning={() => setAdminWarningOpen(true)}
+          />
+        )}
+
+        {activeView === 'plans' && (
+          <PlanManagement
+            plans={plans}
+            recentMembers={recentMembers}
+            onCreatePlan={createPlan}
+            onUpdatePlan={updatePlan}
+            onDeletePlan={deletePlan}
+            cashier={cashier}
+            onShowAdminWarning={() => setAdminWarningOpen(true)}
+          />
+        )}
+
+        {activeView === 'payments' && (
+          <BillingLedger
+            payments={payments}
+            recentMembers={recentMembers}
+            onRefundPayment={async (id) => {
+              try {
+                await refundPayment(id);
+              } catch (err) {
+                alert('Error refunding payment: ' + err.message);
+              }
+            }}
+            cashier={cashier}
+            onShowAdminWarning={() => setAdminWarningOpen(true)}
+          />
+        )}
       </div>
 
       {pendingSubscription && (
@@ -386,6 +457,42 @@ export default function App() {
           error={paymentError}
         />
       )}
+
+      <Modal
+        isOpen={adminWarningOpen}
+        title="Access Restricted"
+        onClose={() => setAdminWarningOpen(false)}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '10px 0' }}>
+          <div style={{
+            width: '60px',
+            height: '60px',
+            borderRadius: '50%',
+            backgroundColor: '#fee2e2',
+            color: '#ef4444',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '16px'
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <h4 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>Admin Permission Required</h4>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', marginBottom: '24px', lineHeight: 1.5 }}>
+            This administrative operation is restricted. Please request assistance from your manager or log in with an Administrator profile to proceed.
+          </p>
+          <Button
+            onClick={() => setAdminWarningOpen(false)}
+            style={{ width: '100%' }}
+          >
+            Acknowledge
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
