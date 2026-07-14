@@ -98,9 +98,9 @@
 }
 
 .nav-item.active {
-  background-color: var(--brand-vanilla);
-  color: var(--sidebar-text-active);
-  border-color: var(--brand-vanilla);
+  background-color: var(--accent-warm);
+  color: var(--brand-primary);
+  border-color: var(--accent-warm);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
@@ -157,15 +157,15 @@
 }
 
 .status-badge.connected {
-  background-color: var(--color-active-green-bg);
-  color: var(--color-active-green);
-  border: 1.5px solid var(--color-active-green-border);
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1.5px solid rgba(22, 163, 74, 0.2);
 }
 
 .status-badge.offline {
-  background-color: #fee2e2;
-  color: #ef4444;
-  border: 1.5px solid #fca5a5;
+  background-color: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1.5px solid rgba(239, 68, 68, 0.2);
 }
 
 .user-info {
@@ -457,6 +457,10 @@
   flex-direction: column;
   gap: 6px;
   margin-bottom: 16px;
+}
+
+.mb-0 {
+  margin-bottom: 0 !important;
 }
 
 .form-label {

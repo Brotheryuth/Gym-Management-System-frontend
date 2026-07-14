@@ -19,14 +19,16 @@ export default function InputField({
   rightLabel,
   ...props
 }) {
-  const inputId = id || `input-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  const inputId = id || (label ? `input-${label.toLowerCase().replace(/\s+/g, '-')}` : `input-search-${Math.random().toString(36).substr(2, 9)}`);
 
   return (
     <div className={`form-group ${className}`}>
-      <label htmlFor={inputId} className="form-label">
-        <span>{label}</span>
-        {rightLabel && <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>{rightLabel}</span>}
-      </label>
+      {label && (
+        <label htmlFor={inputId} className="form-label">
+          <span>{label}</span>
+          {rightLabel && <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>{rightLabel}</span>}
+        </label>
+      )}
       <input
         id={inputId}
         type={type}

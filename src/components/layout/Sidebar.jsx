@@ -10,8 +10,7 @@ export default function Sidebar({ activeView, setActiveView }) {
   return (
     <aside className="app-sidebar">
       <div className="sidebar-brand">
-        <div className="sidebar-logo">G</div>
-        <div className="sidebar-title">Gym<span>Management</span></div>
+        <img src="/logo.jpg" alt="Gym Logo" style={{ maxHeight: '48px', maxWidth: '100%', objectFit: 'contain', borderRadius: '50px'}} /> <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', marginLeft: '10px' }}>Gym Management</span>
       </div>
 
       <nav className="sidebar-nav">

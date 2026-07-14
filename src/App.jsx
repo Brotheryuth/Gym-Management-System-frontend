@@ -11,6 +11,7 @@ import MembershipManagement from './components/features/MembershipManagement';
 import PlanManagement from './components/features/PlanManagement';
 import BillingLedger from './components/features/BillingLedger';
 import Modal from './components/ui/Modal';
+import Button from './components/ui/Button';
 import './App.css';
 
 const DEFAULT_FORM_STATE = {
@@ -28,6 +29,7 @@ export default function App() {
   const {
     plans,
     recentMembers,
+    members,
     payments,
     cashier,
     isOffline,
@@ -149,7 +151,20 @@ export default function App() {
       newErrors.phoneNumber = 'Phone number must be between 9 and 11 digits';
     }
 
-    if (!form.dob) newErrors.dob = 'Date of birth is required';
+    if (!form.dob) {
+      newErrors.dob = 'Date of birth is required';
+    } else {
+      const birthDate = new Date(form.dob);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 12) {
+        newErrors.dob = 'Member must be at least 12 years old (verify Date of Birth is correct)';
+      }
+    }
 
     setErrors(prev => ({ ...prev, ...newErrors }));
     return Object.keys(newErrors).length === 0;
@@ -277,6 +292,28 @@ export default function App() {
     }
   };
 
+  // Direct subscription creation callback (decoupled from step-by-step wizard)
+  const handleCreateSubscriptionDirect = async (payload) => {
+    setPaymentError('');
+    try {
+      const response = await createMembership(payload);
+      
+      const activePlan = plans.find(p => String(p.planID) === String(payload.planID));
+      const basePrice = activePlan ? Number(activePlan.planPrice) : 0;
+      const calculatedFinalPrice = Math.max(0, basePrice - (basePrice * (Number(payload.discount) || 0)) / 100);
+
+      setPendingSubscription({
+        ...response,
+        memberName: payload.memberName,
+        finalPriceOverride: calculatedFinalPrice
+      });
+      setIsPaymentOpen(true);
+    } catch (err) {
+      alert(err.message || 'Failed to create subscription');
+    }
+  };
+
+
   // Switch payment method inside payment modal
   const handlePaymentMethodChange = (newMethod) => {
     setPendingSubscription(prev => {
@@ -390,8 +427,9 @@ export default function App() {
 
         {activeView === 'members' && (
           <MemberManagement
-            recentMembers={recentMembers}
-            onEditMember={handleEditMember}
+            members={members}
+            onRegisterMember={registerMember}
+            onUpdateMember={updateMember}
             onDeleteMember={handleDeleteMember}
             cashier={cashier}
             onShowAdminWarning={() => setAdminWarningOpen(true)}
@@ -401,6 +439,9 @@ export default function App() {
         {activeView === 'memberships' && (
           <MembershipManagement
             recentMembers={recentMembers}
+            members={members}
+            plans={plans}
+            onCreateMembership={handleCreateSubscriptionDirect}
             onPayPending={handlePayPending}
             onCancelMembership={async (id) => {
               try {
@@ -444,18 +485,18 @@ export default function App() {
       </div>
 
       {pendingSubscription && (
-        <PaymentModal
-          isOpen={isPaymentOpen}
-          onClose={() => setIsPaymentOpen(false)}
-          paymentID={pendingSubscription.paymentID}
-          paymentMethod={pendingSubscription.paymentMethod}
-          totalAmount={finalPrice}
-          memberName={pendingSubscription.memberName}
-          onConfirm={handleConfirmPayment}
-          onMethodChange={handlePaymentMethodChange}
-          isLoading={isLoading}
-          error={paymentError}
-        />
+          <PaymentModal
+            isOpen={isPaymentOpen}
+            onClose={() => setIsPaymentOpen(false)}
+            paymentID={pendingSubscription.paymentID}
+            paymentMethod={pendingSubscription.paymentMethod}
+            totalAmount={pendingSubscription.finalPriceOverride !== undefined ? pendingSubscription.finalPriceOverride : finalPrice}
+            memberName={pendingSubscription.memberName}
+            onConfirm={handleConfirmPayment}
+            onMethodChange={handlePaymentMethodChange}
+            isLoading={isLoading}
+            error={paymentError}
+          />
       )}
 
       <Modal

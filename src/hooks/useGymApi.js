@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loginApi } from '../services/authService';
 import { fetchPlansApi, createPlanApi, updatePlanApi, deletePlanApi } from '../services/planService';
-import { registerMemberApi, updateMemberApi, deleteMemberApi } from '../services/memberService';
+import { registerMemberApi, updateMemberApi, deleteMemberApi, fetchMembersApi } from '../services/memberService';
 import { createMembershipApi, cancelMembershipApi } from '../services/membershipService';
 import { confirmPaymentApi, refundPaymentApi } from '../services/paymentService';
 
 export default function useGymApi() {
   const [plans, setPlans] = useState([]);
   const [recentMembers, setRecentMembers] = useState([]);
+  const [members, setMembers] = useState([]);
   const [payments, setPayments] = useState([]);
   const [cashier, setCashier] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
@@ -33,16 +34,57 @@ export default function useGymApi() {
   // Synchronize dashboard lists from backend
   const refreshDatabase = useCallback(async () => {
     try {
-      const [memRes, payRes] = await Promise.all([
+      const [memRes, payRes, membersRes] = await Promise.all([
         fetch('/api/memberships'),
-        fetch('/api/payments')
+        fetch('/api/payments'),
+        fetch('/api/members').catch(() => ({ ok: false }))
       ]);
+
+      let mappedMembers = [];
+      if (membersRes && membersRes.ok) {
+        const membersData = await membersRes.json();
+        if (Array.isArray(membersData)) {
+          mappedMembers = membersData.map(m => ({
+            id: m.id,
+            memberID: String(m.id || m.memberID),
+            fullName: m.fullName,
+            phoneNumber: m.phoneNumber,
+            dob: m.dob,
+            gender: m.gender,
+            status: m.status || 'ACTIVE'
+          }));
+        }
+      }
+
+      let mappedMems = [];
       if (memRes.ok) {
         const memData = await memRes.json();
-        setRecentMembers(mapMemberships(memData));
+        mappedMems = mapMemberships(memData);
+        setRecentMembers(mappedMems);
       } else {
         setRecentMembers([]);
       }
+
+      // Fallback: Extract unique member accounts from memberships list
+      if (mappedMembers.length === 0 && mappedMems.length > 0) {
+        const uniqueIds = new Set();
+        mappedMems.forEach(m => {
+          if (m.memberID && m.memberID !== 'N/A' && !uniqueIds.has(m.memberID)) {
+            uniqueIds.add(m.memberID);
+            mappedMembers.push({
+              id: m.id,
+              memberID: m.memberID,
+              fullName: m.fullName,
+              phoneNumber: m.phoneNumber,
+              dob: m.dob,
+              gender: m.gender,
+              status: m.status
+            });
+          }
+        });
+      }
+      setMembers(mappedMembers);
+
       if (payRes.ok) {
         const payData = await payRes.json();
         setPayments(payData);
@@ -53,6 +95,7 @@ export default function useGymApi() {
       console.warn('Failed to refresh database:', err);
       setRecentMembers([]);
       setPayments([]);
+      setMembers([]);
       setIsOffline(true);
     }
   }, [mapMemberships]);
@@ -72,6 +115,7 @@ export default function useGymApi() {
           setIsOffline(true);
           setPlans([]);
           setRecentMembers([]);
+          setMembers([]);
           setPayments([]);
         }
       } catch (err) {
@@ -79,6 +123,7 @@ export default function useGymApi() {
         setIsOffline(true);
         setPlans([]);
         setRecentMembers([]);
+        setMembers([]);
         setPayments([]);
       } finally {
         setIsLoading(false);
@@ -292,6 +337,7 @@ export default function useGymApi() {
   return {
     plans,
     recentMembers,
+    members,
     payments,
     cashier,
     isOffline,

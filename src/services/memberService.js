@@ -38,3 +38,9 @@ export async function deleteMemberApi(memberID) {
   const res = await fetch(`/api/members/${memberID}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Failed to delete member profile');
 }
+
+export async function fetchMembersApi() {
+  const res = await fetch('/api/members');
+  if (!res.ok) throw new Error('Failed to fetch members list');
+  return await res.json();
+}

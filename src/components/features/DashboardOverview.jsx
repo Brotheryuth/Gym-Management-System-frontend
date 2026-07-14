@@ -1,38 +1,25 @@
 import React from 'react';
+import Button from '../ui/Button';
 import MetricCards from './dashboard/MetricCards';
-import HeroBanners from './dashboard/HeroBanners';
-import TrafficBarChart from './dashboard/TrafficBarChart';
-import SalesLineChart from './dashboard/SalesLineChart';
-import SubscriptionsTable from './dashboard/SubscriptionsTable';
-import ActivityTimeline from './dashboard/ActivityTimeline';
+import PaymentDistribution from './dashboard/PaymentDistribution';
+import PeakTraffic from './dashboard/PeakTraffic';
+import LiveCheckoutStream from './dashboard/LiveCheckoutStream';
+import QuickShortcuts from './dashboard/QuickShortcuts';
 
-/**
- * DashboardOverview component coordinates metrics and visual analytics subcomponents.
- * Aligned with the So Matcha color palette.
- * @param {object} props
- * @param {Array} props.recentMembers - List of recent membership profiles
- * @param {Array} props.payments - List of payment transactions
- * @param {function} props.setActiveView - Handler to switch view states
- * @param {function} props.onDeleteMember - Handler to delete a member profile
- * @param {function} props.onEditMember - Handler to edit a member profile
- * @param {function} props.onPayPending - Handler to process payment for pending subscription
- */
-export default function DashboardOverview({ 
-  recentMembers = [], 
-  payments = [], 
+export default function DashboardOverview({
+  recentMembers = [],
+  payments = [],
   setActiveView,
-  onDeleteMember,
-  onEditMember,
   onPayPending
 }) {
-  const todayStr = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+  const todayStr = new Date().toISOString().split('T')[0];
   
-  // Yesterday's date string for comparisons
+  // Yesterday's date string for comparison
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-  // 1. Stat Calculations (Dynamic DB values)
+  // 1. Calculations for dynamic dashboard metrics
   const todayPayments = payments.filter(p => {
     if (p.status !== 'PAID') return false;
     const pDate = p.paymentDate || p.createAt;
@@ -56,7 +43,6 @@ export default function DashboardOverview({
 
   // Active Members
   const activeMembersCount = recentMembers.filter(m => m.status === 'ACTIVE').length;
-  
   const activeMembersYesterday = recentMembers.filter(m => {
     if (m.status !== 'ACTIVE') return false;
     return !m.startDate || !String(m.startDate).startsWith(todayStr);
@@ -88,61 +74,102 @@ export default function DashboardOverview({
     .filter(p => p.status === 'PAID')
     .reduce((sum, p) => sum + p.finalAmount, 0);
 
-  // 2. Chart Processing (SVG Line Chart)
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const monthlySales = Array(12).fill(0);
-  const monthlyTransactions = Array(12).fill(0);
-
-  payments.forEach(p => {
-    if (p.status !== 'PAID') return;
-    const dateStr = p.paymentDate || p.createAt;
-    if (!dateStr) return;
-    const dateObj = new Date(dateStr);
-    const mIndex = dateObj.getMonth();
-    monthlySales[mIndex] += p.finalAmount;
-    monthlyTransactions[mIndex]++;
-  });
-
-  const maxSales = Math.max(...monthlySales, 100); 
-  const maxTransactions = Math.max(...monthlyTransactions, 10);
-
-  const getLinePoints = (data, maxVal) => {
-    return data.map((val, idx) => {
-      const x = 30 + (idx * 40);
-      const y = 130 - (val / maxVal) * 110;
-      return `${x},${y}`;
-    }).join(' ');
-  };
-
-  const salesPoints = getLinePoints(monthlySales, maxSales);
-  const transPoints = getLinePoints(monthlyTransactions, maxTransactions);
-  
-  const salesAreaPoints = salesPoints ? `30,130 ${salesPoints} 470,130` : '';
-  const transAreaPoints = transPoints ? `30,130 ${transPoints} 470,130` : '';
-
-  // 3. Bar Chart Processing (SVG Bar Chart for hourly traffic)
-  const slots = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"];
-  const slotCounts = Array(slots.length).fill(0);
-  recentMembers.forEach(m => {
-    const hash = m.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const slotIdx = hash % slots.length;
-    slotCounts[slotIdx]++;
-  });
-  const maxSlotCount = Math.max(...slotCounts, 5);
-
-  // 4. Payment Gateway Breakdown
+  // 2. Gateway distribution data
   const khqrSum = payments.filter(p => p.status === 'PAID' && p.method === 'KHQR').reduce((s, p) => s + p.finalAmount, 0);
   const cashSum = payments.filter(p => p.status === 'PAID' && (p.method === 'BYCASH' || p.method === 'CASH')).reduce((s, p) => s + p.finalAmount, 0);
   const cardSum = payments.filter(p => p.status === 'PAID' && p.method === 'CREDITCARD').reduce((s, p) => s + p.finalAmount, 0);
+  
+  const gatewayTotal = khqrSum + cashSum + cardSum || 1;
+  const khqrPct = Math.round((khqrSum / gatewayTotal) * 100);
+  const cashPct = Math.round((cashSum / gatewayTotal) * 100);
+  const cardPct = Math.round((cardSum / gatewayTotal) * 100);
 
-  // Helper: Find member name from ID
-  const getMemberName = (membershipID) => {
-    const mem = recentMembers.find(m => String(m.id) === String(membershipID));
-    return mem ? mem.fullName : 'Walk-in Customer';
+  // 3. Hourly traffic Slots
+  const slots = ["08:00", "12:00", "16:00", "18:00", "20:00", "22:00"];
+  const slotCounts = Array(slots.length).fill(0);
+  recentMembers.forEach(m => {
+    const hash = (m.memberID || m.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const slotIdx = hash % slots.length;
+    slotCounts[slotIdx]++;
+  });
+  const maxSlotCount = Math.max(...slotCounts, 1);
+
+  // 4. Live activity feed - Get last 4 completed payments
+  const recentPaidTransactions = [...payments]
+    .filter(p => p.status === 'PAID')
+    .sort((a, b) => new Date(b.paymentDate || b.createAt) - new Date(a.paymentDate || a.createAt))
+    .slice(0, 4);
+
+  const getMemberName = (paymentItem) => {
+    const memberObj = recentMembers.find(m => String(m.memberID) === String(paymentItem.memberID || paymentItem.member?.id));
+    return memberObj ? memberObj.fullName : paymentItem.memberName || 'Walk-in Customer';
   };
+
+  // Target goals percentages
+  const dailyRevenueGoal = 500;
+  const revenueGoalPct = Math.min(100, Math.round((todaySales / dailyRevenueGoal) * 100));
+
+  const memberCapacityGoal = 150;
+  const capacityGoalPct = Math.min(100, Math.round((activeMembersCount / memberCapacityGoal) * 100));
 
   return (
     <div className="dashboard-overview-container">
+      
+      {/* Welcome & Command Header */}
+      <div className="purity-card" style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        background: 'linear-gradient(135deg, var(--brand-primary) 0%, #295b96 100%)',
+        color: '#ffffff',
+        border: 'none',
+        padding: '24px 32px',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent-warm)', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+            Operational Dashboard
+          </span>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, marginTop: '6px', fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>
+            Cashier Control Center
+          </h2>
+          <p style={{ fontSize: '13.5px', color: 'rgba(255, 255, 255, 0.85)', marginTop: '8px', maxWidth: '520px', lineHeight: '1.5' }}>
+            Monitor real-time payments, audit active subscriptions, and process gate entries from one visual control plane.
+          </p>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '12px', zIndex: 2 }}>
+          <Button
+            onClick={() => setActiveView('register')}
+            style={{
+              background: 'var(--accent-warm)',
+              color: 'var(--text-primary)',
+              border: 'none',
+              fontWeight: 700,
+              padding: '10px 20px',
+              borderRadius: 'var(--radius-sm)',
+              boxShadow: '0 4px 12px rgba(230, 161, 0, 0.2)'
+            }}
+          >
+            Checkout Subscription
+          </Button>
+        </div>
+
+        {/* Decorative ambient background shape */}
+        <div style={{
+          position: 'absolute',
+          right: '-50px',
+          top: '-50px',
+          width: '220px',
+          height: '220px',
+          background: 'rgba(255, 255, 255, 0.03)',
+          borderRadius: '50%',
+          zIndex: 1
+        }} />
+      </div>
+
+      {/* Metrics Cards Component */}
       <MetricCards
         todaySales={todaySales}
         salesChangePercent={salesChangePercent}
@@ -151,49 +178,36 @@ export default function DashboardOverview({
         todayNewMembersCount={todayNewMembersCount}
         newClientsChangePercent={newClientsChangePercent}
         totalSales={totalSales}
+        revenueGoalPct={revenueGoalPct}
+        capacityGoalPct={capacityGoalPct}
       />
 
-      <HeroBanners
-        setActiveView={setActiveView}
-        khqrSum={khqrSum}
-        cashSum={cashSum}
-        cardSum={cardSum}
-      />
-
-      <div className="purity-grid-2-3">
-        <TrafficBarChart
-          recentMembersCount={recentMembers.length}
-          todayNewMembersCount={todayNewMembersCount}
-          totalSales={totalSales}
-          slotCounts={slotCounts}
+      {/* Graphical Breakdown Row */}
+      <div className="purity-grid-2-3" style={{ gridTemplateColumns: '1fr 2fr' }}>
+        <PaymentDistribution
+          khqrSum={khqrSum}
+          cashSum={cashSum}
+          cardSum={cardSum}
+          khqrPct={khqrPct}
+          cashPct={cashPct}
+          cardPct={cardPct}
+        />
+        <PeakTraffic
           slots={slots}
+          slotCounts={slotCounts}
           maxSlotCount={maxSlotCount}
         />
-
-        <SalesLineChart
-          salesPoints={salesPoints}
-          transPoints={transPoints}
-          salesAreaPoints={salesAreaPoints}
-          transAreaPoints={transAreaPoints}
-          monthlySales={monthlySales}
-          maxSales={maxSales}
-          months={months}
-        />
       </div>
 
+      {/* Simplified Live Operations feed & quick actions */}
       <div className="purity-grid-3-2">
-        <SubscriptionsTable
-          recentMembers={recentMembers}
-          onPayPending={onPayPending}
-          onEditMember={onEditMember}
-          onDeleteMember={onDeleteMember}
-        />
-
-        <ActivityTimeline
-          payments={payments}
+        <LiveCheckoutStream
+          recentPaidTransactions={recentPaidTransactions}
           getMemberName={getMemberName}
         />
+        <QuickShortcuts setActiveView={setActiveView} />
       </div>
+
     </div>
   );
 }

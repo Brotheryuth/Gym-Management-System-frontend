@@ -2,23 +2,30 @@ import React, { useState } from 'react';
 import Card from '../ui/Card';
 import InputField from '../ui/InputField';
 import Button from '../ui/Button';
+import MemberFormModal from './MemberFormModal';
 
 export default function MemberManagement({
-  recentMembers = [],
-  onEditMember,
+  members = [],
+  onRegisterMember,
+  onUpdateMember,
   onDeleteMember,
   cashier,
   onShowAdminWarning
 }) {
   const [search, setSearch] = useState('');
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // 1. Stats Box calculations
-  const totalMembers = recentMembers.length;
-  const activeMembers = recentMembers.filter(m => m.status === 'ACTIVE').length;
+  const totalMembers = members.length;
+  const activeMembers = members.filter(m => m.status === 'ACTIVE').length;
   const inactiveMembers = totalMembers - activeMembers;
 
   // 2. Filter list
-  const filteredMembers = recentMembers.filter(m => {
+  const filteredMembers = members.filter(m => {
     const term = search.toLowerCase();
     return (
       (m.fullName && m.fullName.toLowerCase().includes(term)) ||
@@ -27,12 +34,40 @@ export default function MemberManagement({
     );
   });
 
+  const handleRegisterClick = () => {
+    setSelectedMember(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditClick = (member) => {
+    setSelectedMember(member);
+    setIsModalOpen(true);
+  };
+
   const handleDelete = (memberID) => {
     if (cashier?.role !== 'ADMIN') {
       onShowAdminWarning();
       return;
     }
     onDeleteMember(memberID);
+  };
+
+  const handleFormSubmit = async (formData) => {
+    setIsSaving(true);
+    try {
+      if (selectedMember) {
+        // Edit mode
+        await onUpdateMember(selectedMember.memberID, formData);
+      } else {
+        // Create mode
+        await onRegisterMember(formData);
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      alert(err.message || 'An error occurred while saving the member profile.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -98,13 +133,22 @@ export default function MemberManagement({
             </svg>
             Registered Member Profiles
           </h3>
-          <div style={{ width: '300px' }}>
-            <InputField
-              placeholder="Search by name, ID or phone..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ margin: 0 }}
-            />
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ width: '250px' }}>
+              <InputField
+                placeholder="Search by name, ID or phone..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="mb-0"
+                style={{ margin: 0 }}
+              />
+            </div>
+            <Button
+              onClick={handleRegisterClick}
+              style={{ width: 'auto', minHeight: '38px', padding: '6px 16px', fontSize: '13px' }}
+            >
+              Register Member
+            </Button>
           </div>
         </div>
 
@@ -130,7 +174,7 @@ export default function MemberManagement({
                 </tr>
               ) : (
                 filteredMembers.map((m) => (
-                  <tr key={m.id || m.memberID}>
+                  <tr key={m.memberID}>
                     <td style={{ fontWeight: 'bold' }}>{m.memberID || 'N/A'}</td>
                     <td>
                       <span className="member-name-cell">{m.fullName}</span>
@@ -165,14 +209,14 @@ export default function MemberManagement({
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <Button
                           variant="secondary"
-                          onClick={() => onEditMember(m)}
+                          onClick={() => handleEditClick(m)}
                           style={{ minHeight: '32px', padding: '4px 10px', fontSize: '12px', width: 'auto' }}
                         >
                           Edit Profile
                         </Button>
                         <Button
                           variant="ghost"
-                          onClick={() => handleDelete(m.id || m.memberID)}
+                          onClick={() => handleDelete(m.memberID)}
                           style={{
                             minHeight: '32px',
                             padding: '4px 10px',
@@ -194,6 +238,15 @@ export default function MemberManagement({
           </table>
         </div>
       </Card>
+
+      {/* Member Creation & Edit Popup Overlay Modal */}
+      <MemberFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleFormSubmit}
+        initialData={selectedMember}
+        isLoading={isSaving}
+      />
     </div>
   );
 }

@@ -1,51 +1,52 @@
-@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Brand Color Palette - So Matcha (Yellow-Blue Focus) */
-  --bg-canvas: hsl(60, 100%, 98%); /* Ivory (Warm Light Yellow) */
-  --bg-surface: #ffffff; /* Pure white card panels */
+  /* Brand Color Palette - 60-30-10 Rule Refinement */
+  --bg-canvas: #FAF8F2; /* Warm desaturated off-white (60%) */
+  --bg-surface: #FFFFFF; /* Pure white surface */
   
-  --bg-sidebar: #3971b8; /* Celtic Blue */
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-text-active: #3971b8; /* Celtic Blue active text on Vanilla background */
-  --sidebar-text-inactive: rgba(251, 252, 238, 0.85); /* Ivory inactive text */
   
-  /* Primary Accents */
-  --accent-blue: #3971b8; /* Celtic Blue */
+  /* Primary brand color (30% weight) */
+  --brand-primary: #3971B8; /* Celtic Blue */
+  
+  /* Secondary accent color (10% weight) */
+  --accent-warm: #2be8ef; /* Refined Gold */
+  
+  /* Typography Variables */
+  --text-primary: #2B2E1F; /* Cooled dark charcoal-brown */
+  --text-muted: #6B7058; /* Muted olive slate */
+  
+  /* Borders */
+  --color-border: #D9E4F0; /* Soft desaturated light blue border */
+  
+  /* Semantic Status Variables */
+  --color-success: #16A34A;
+  --color-success-bg: #DCFCE7;
+  
+  --color-pending: #D97706;
+  --color-pending-bg: #FEF3C7;
+  
+  --color-error: #EF4444;
+  --color-error-bg: #FEE2E2;
+
+  /* Typography */
+  --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  
+  /* Legacy Color Token Compatibility Aliases */
+  --bg-sidebar: var(--brand-primary);
+  --sidebar-text-inactive: rgba(251, 252, 238, 0.85);
+  --sidebar-text-active: var(--brand-primary);
+  
+  --accent-blue: var(--brand-primary);
   --accent-blue-hover: #2b5998;
   --accent-blue-light: rgba(57, 113, 184, 0.06);
   --accent-blue-border: rgba(57, 113, 184, 0.2);
   
-  /* Brand Yellow */
-  --brand-vanilla: #f6e6a5; /* Vanilla Yellow */
-  --brand-vanilla-light: rgba(246, 230, 165, 0.25);
-  --brand-vanilla-border: rgba(246, 230, 165, 0.6);
-  
-  /* Brand Green */
-  --brand-tea-green: #c8d69b; /* Tea Green */
-  --brand-tea-green-light: rgba(200, 214, 155, 0.18);
-  --brand-tea-green-border: rgba(200, 214, 155, 0.5);
-  
-  /* Typography Variables */
-  --text-primary: #343b1b; /* Drab Dark Brown */
-  --text-muted: #5c6443; /* Muted olive-grey */
-  
-  /* Redesigned Border Color - Clean Soft Celtic Blue */
-  --color-border: #adcdec; 
-  
-  /* Green active states */
-  --color-active-green: #ffffff;
-  --color-active-green-bg: #4bbe04;
-  --color-active-green-border: transparent;
-  
-  --color-error: #ef4444;
-  --color-error-bg: rgba(239, 68, 68, 0.04);
-  --color-success: #3971b8; /* Celtic Blue for success links */
-  --color-success-bg: rgba(246, 230, 165, 0.25); /* Vanilla background */
-
-  /* Typography */
-  --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: 'Comfortaa', cursive, sans-serif;
+  --brand-vanilla: var(--accent-warm);
+  --brand-vanilla-light: rgba(230, 161, 0, 0.08);
+  --brand-vanilla-border: rgba(230, 161, 0, 0.2);
   
   /* Shadows - Tactile Soft UI elevation */
   --shadow-tactile: 
