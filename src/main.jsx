@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 
 // Intercept fetch calls globally to prepend target API URL in production
+console.log("DEBUG: VITE_API_URL =", import.meta.env.VITE_API_URL);
 const originalFetch = window.fetch;
 window.fetch = function (url, options) {
   if (typeof url === 'string' && url.startsWith('/api/')) {
