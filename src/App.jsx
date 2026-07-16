@@ -10,8 +10,8 @@ import MemberManagement from './components/features/MemberManagement';
 import MembershipManagement from './components/features/MembershipManagement';
 import PlanManagement from './components/features/PlanManagement';
 import BillingLedger from './components/features/BillingLedger';
-import Modal from './components/ui/Modal';
-import Button from './components/ui/Button';
+import { validateField, validateProfileForm, validateBillingForm } from './utils/validation';
+import AdminWarningModal from './components/ui/AdminWarningModal';
 import './App.css';
 
 const DEFAULT_FORM_STATE = {
@@ -74,123 +74,33 @@ export default function App() {
     }
   }, [plans]);
 
-  // Real-time single field validation
-  const validateField = (field, value) => {
-    let errMessage = '';
-    
-    if (field === 'fullName') {
-      if (!value.trim()) {
-        errMessage = 'Full name is required';
-      } else if (value.trim().length < 2) {
-        errMessage = 'Name must be at least 2 characters long';
-      }
-    }
-
-    if (field === 'phoneNumber') {
-      const cleanPhone = value.replace(/\s+/g, '');
-      const phoneRegex = /^\d{9,11}$/;
-      if (!cleanPhone) {
-        errMessage = 'Phone number is required';
-      } else if (!phoneRegex.test(cleanPhone)) {
-        errMessage = 'Enter a valid digit sequence (9 to 11 numbers)';
-      }
-    }
-
-    if (field === 'dob') {
-      if (!value) {
-        errMessage = 'Date of birth is required';
-      } else {
-        const birthDate = new Date(value);
-        const today = new Date();
-        if (birthDate > today) {
-          errMessage = 'Date of birth cannot be in the future';
-        }
-      }
-    }
-
-    if (field === 'discount') {
-      const val = Number(value);
-      if (isNaN(val) || val < 0 || val > 100) {
-        errMessage = 'Discount must be between 0% and 100%';
-      }
-    }
-
-    setErrors(prev => {
-      const next = { ...prev };
-      if (errMessage) {
-        next[field] = errMessage;
-      } else {
-        delete next[field];
-      }
-      return next;
-    });
-  };
-
   const handleFormChange = (field, value) => {
     setForm(prev => {
       const updated = { ...prev, [field]: value };
       if (['fullName', 'phoneNumber', 'dob', 'discount'].includes(field)) {
-        validateField(field, value);
+        const errMessage = validateField(field, value);
+        setErrors(prevErrors => {
+          const next = { ...prevErrors };
+          if (errMessage) {
+            next[field] = errMessage;
+          } else {
+            delete next[field];
+          }
+          return next;
+        });
       }
       return updated;
     });
-  };
-
-  // Validate Step 1 Profile Fields
-  const validateProfileForm = () => {
-    const newErrors = {};
-    if (!form.fullName.trim()) newErrors.fullName = 'Full name is required';
-    if (form.fullName.trim().length > 0 && form.fullName.trim().length < 2) {
-      newErrors.fullName = 'Name must be at least 2 characters long';
-    }
-    
-    const phoneRegex = /^\d{9,11}$/;
-    if (!form.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Phone number is required';
-    } else if (!phoneRegex.test(form.phoneNumber.replace(/\s+/g, ''))) {
-      newErrors.phoneNumber = 'Phone number must be between 9 and 11 digits';
-    }
-
-    if (!form.dob) {
-      newErrors.dob = 'Date of birth is required';
-    } else {
-      const birthDate = new Date(form.dob);
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      if (age < 12) {
-        newErrors.dob = 'Member must be at least 12 years old (verify Date of Birth is correct)';
-      }
-    }
-
-    setErrors(prev => ({ ...prev, ...newErrors }));
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Validate Step 2 Billing Fields
-  const validateBillingForm = () => {
-    const newErrors = {};
-    if (!form.planID) newErrors.planID = 'Please select a gym plan';
-    
-    const discountVal = Number(form.discount);
-    if (isNaN(discountVal) || discountVal < 0 || discountVal > 100) {
-      newErrors.discount = 'Discount must be between 0 and 100';
-    }
-
-    if (!form.paymentMethod) newErrors.paymentMethod = 'Please select a gateway';
-
-    setErrors(prev => ({ ...prev, ...newErrors }));
-    return Object.keys(newErrors).length === 0;
   };
 
   // Step 1: Submit Profile to API (/api/members)
   const handleRegisterMember = async () => {
     setIsFormLoading(true);
     setErrors({});
-    if (!validateProfileForm()) {
+    
+    const profileErrors = validateProfileForm(form);
+    if (Object.keys(profileErrors).length > 0) {
+      setErrors(profileErrors);
       setIsFormLoading(false);
       return;
     }
@@ -267,7 +177,12 @@ export default function App() {
   const handleCreateMembership = async () => {
     setPaymentError('');
     if (!registeredMember) return;
-    if (!validateBillingForm()) return;
+    
+    const billingErrors = validateBillingForm(form);
+    if (Object.keys(billingErrors).length > 0) {
+      setErrors(billingErrors);
+      return;
+    }
 
     try {
       const subscriptionPayload = {
@@ -499,41 +414,10 @@ export default function App() {
           />
       )}
 
-      <Modal
+      <AdminWarningModal
         isOpen={adminWarningOpen}
-        title="Access Restricted"
         onClose={() => setAdminWarningOpen(false)}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '10px 0' }}>
-          <div style={{
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            backgroundColor: '#fee2e2',
-            color: '#ef4444',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '16px'
-          }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-          </div>
-          <h4 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>Admin Permission Required</h4>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', marginBottom: '24px', lineHeight: 1.5 }}>
-            This administrative operation is restricted. Please request assistance from your manager or log in with an Administrator profile to proceed.
-          </p>
-          <Button
-            onClick={() => setAdminWarningOpen(false)}
-            style={{ width: '100%' }}
-          >
-            Acknowledge
-          </Button>
-        </div>
-      </Modal>
+      />
     </div>
   );
 }
