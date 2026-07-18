@@ -15,7 +15,7 @@ export const validateField = (field, value) => {
     if (!cleanPhone) {
       errMessage = 'Phone number is required';
     } else if (!phoneRegex.test(cleanPhone)) {
-      errMessage = 'Enter a valid digit sequence (9 to 11 numbers)';
+      errMessage = 'Phone number must be between 9 and 11 digits';
     }
   }
 
@@ -27,6 +27,15 @@ export const validateField = (field, value) => {
       const today = new Date();
       if (birthDate > today) {
         errMessage = 'Date of birth cannot be in the future';
+      } else {
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        if (age < 12) {
+          errMessage = 'Member must be at least 12 years old (verify Date of Birth is correct)';
+        }
       }
     }
   }
@@ -43,33 +52,10 @@ export const validateField = (field, value) => {
 
 export const validateProfileForm = (form) => {
   const newErrors = {};
-  if (!form.fullName.trim()) newErrors.fullName = 'Full name is required';
-  if (form.fullName.trim().length > 0 && form.fullName.trim().length < 2) {
-    newErrors.fullName = 'Name must be at least 2 characters long';
-  }
-  
-  const phoneRegex = /^\d{9,11}$/;
-  if (!form.phoneNumber.trim()) {
-    newErrors.phoneNumber = 'Phone number is required';
-  } else if (!phoneRegex.test(form.phoneNumber.replace(/\s+/g, ''))) {
-    newErrors.phoneNumber = 'Phone number must be between 9 and 11 digits';
-  }
-
-  if (!form.dob) {
-    newErrors.dob = 'Date of birth is required';
-  } else {
-    const birthDate = new Date(form.dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    if (age < 12) {
-      newErrors.dob = 'Member must be at least 12 years old (verify Date of Birth is correct)';
-    }
-  }
-
+  ['fullName', 'phoneNumber', 'dob'].forEach(field => {
+    const err = validateField(field, form[field]);
+    if (err) newErrors[field] = err;
+  });
   return newErrors;
 };
 
@@ -77,10 +63,8 @@ export const validateBillingForm = (form) => {
   const newErrors = {};
   if (!form.planID) newErrors.planID = 'Please select a gym plan';
   
-  const discountVal = Number(form.discount);
-  if (isNaN(discountVal) || discountVal < 0 || discountVal > 100) {
-    newErrors.discount = 'Discount must be between 0 and 100';
-  }
+  const discountErr = validateField('discount', form.discount);
+  if (discountErr) newErrors.discount = discountErr;
 
   if (!form.paymentMethod) newErrors.paymentMethod = 'Please select a gateway';
 
