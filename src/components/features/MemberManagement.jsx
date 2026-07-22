@@ -6,33 +6,65 @@ import MemberFormModal from './MemberFormModal';
 
 export default function MemberManagement({
   members = [],
+  recentMembers = [],
+  plans = [],
   onRegisterMember,
   onUpdateMember,
   onDeleteMember,
+  onViewProfile,
   cashier,
   onShowAdminWarning
 }) {
   const [search, setSearch] = useState('');
+  const [genderFilter, setGenderFilter] = useState('ALL');
+  const [planFilter, setPlanFilter] = useState('ALL');
+  const [sortBy, setSortBy] = useState('DEFAULT');
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Helper check if member has an active or valid subscription
+  const hasSub = (m) => {
+    return recentMembers.some(rm => 
+      String(rm.memberID) === String(m.memberID || m.id) ||
+      (rm.fullName && m.fullName && rm.fullName.toLowerCase() === m.fullName.toLowerCase())
+    );
+  };
+
   // 1. Stats Box calculations
   const totalMembers = members.length;
   const activeMembers = members.filter(m => m.status === 'ACTIVE').length;
   const inactiveMembers = totalMembers - activeMembers;
 
-  // 2. Filter list
-  const filteredMembers = members.filter(m => {
-    const term = search.toLowerCase();
-    return (
-      (m.fullName && m.fullName.toLowerCase().includes(term)) ||
-      (m.phoneNumber && m.phoneNumber.toLowerCase().includes(term)) ||
-      (m.memberID && m.memberID.toLowerCase().includes(term))
-    );
-  });
+  // 2. Filter & Sort list
+  const filteredMembers = members
+    .filter(m => {
+      const term = search.toLowerCase();
+      const matchesSearch = (
+        (m.fullName && m.fullName.toLowerCase().includes(term)) ||
+        (m.phoneNumber && m.phoneNumber.toLowerCase().includes(term)) ||
+        (m.memberID && String(m.memberID).toLowerCase().includes(term))
+      );
+      const matchesGender = genderFilter === 'ALL' || m.gender === genderFilter;
+      const isSubscribed = hasSub(m);
+      const matchesPlan = planFilter === 'ALL' 
+        ? true 
+        : planFilter === 'UNSUBSCRIBED' 
+          ? !isSubscribed 
+          : (m.planName === planFilter || recentMembers.some(rm => (String(rm.memberID) === String(m.memberID || m.id) || rm.fullName?.toLowerCase() === m.fullName?.toLowerCase()) && rm.planName === planFilter));
+      return matchesSearch && matchesGender && matchesPlan;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'UNSUBSCRIBED_FIRST') return (hasSub(a) ? 1 : 0) - (hasSub(b) ? 1 : 0);
+      if (sortBy === 'SUBSCRIBED_FIRST') return (hasSub(b) ? 1 : 0) - (hasSub(a) ? 1 : 0);
+      if (sortBy === 'NAME_ASC') return (a.fullName || '').localeCompare(b.fullName || '');
+      if (sortBy === 'NAME_DESC') return (b.fullName || '').localeCompare(a.fullName || '');
+      if (sortBy === 'GENDER') return (a.gender || '').localeCompare(b.gender || '');
+      if (sortBy === 'PLAN') return (a.planName || '').localeCompare(b.planName || '');
+      return 0;
+    });
 
   const handleRegisterClick = () => {
     setSelectedMember(null);
@@ -98,24 +130,23 @@ export default function MemberManagement({
           </div>
           <div className="purity-metric-icon green">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
         </div>
 
         <div className="purity-card purity-metric-card">
           <div className="purity-metric-info">
-            <h5>Inactive / Pending</h5>
+            <h5>Inactive / Suspended</h5>
             <div className="purity-metric-value-row">
               <span className="purity-metric-value" style={{ color: 'var(--color-error)' }}>{inactiveMembers}</span>
             </div>
           </div>
-          <div className="purity-metric-icon orange">
+          <div className="purity-metric-icon red">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
             </svg>
           </div>
         </div>
@@ -133,16 +164,87 @@ export default function MemberManagement({
             </svg>
             Registered Member Profiles
           </h3>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ width: '250px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ width: '210px' }}>
               <InputField
-                placeholder="Search by name, ID or phone..."
+                placeholder="Search name, ID, phone..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="mb-0"
                 style={{ margin: 0 }}
               />
             </div>
+
+            {/* Gender Filter */}
+            <select
+              value={genderFilter}
+              onChange={(e) => setGenderFilter(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1.5px solid var(--color-border)',
+                backgroundColor: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              <option value="ALL">All Genders</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+
+            {/* Plan Filter */}
+            <select
+              value={planFilter}
+              onChange={(e) => setPlanFilter(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1.5px solid var(--color-border)',
+                backgroundColor: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              <option value="ALL">All Plans</option>
+              <option value="UNSUBSCRIBED">Unsubscribed (No Plan)</option>
+              {plans.map(p => (
+                <option key={p.planID} value={p.planName}>{p.planName}</option>
+              ))}
+            </select>
+
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1.5px solid var(--color-border)',
+                backgroundColor: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              <option value="DEFAULT">Sort by Default</option>
+              <option value="UNSUBSCRIBED_FIRST"> Unsubscribed First</option>
+              <option value="SUBSCRIBED_FIRST">Subscribed First</option>
+              <option value="NAME_ASC">Name (A-Z)</option>
+              <option value="NAME_DESC">Name (Z-A)</option>
+              <option value="GENDER">Gender</option>
+              <option value="PLAN">Gym Plan</option>
+            </select>
+
             <Button
               onClick={handleRegisterClick}
               style={{ width: 'auto', minHeight: '38px', padding: '6px 16px', fontSize: '13px' }}
@@ -152,7 +254,7 @@ export default function MemberManagement({
           </div>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
+        <div className="dashboard-table-container">
           <table className="dashboard-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
@@ -177,7 +279,14 @@ export default function MemberManagement({
                   <tr key={m.memberID ? `m-${m.memberID}-${idx}` : `m-idx-${idx}`}>
                     <td style={{ fontWeight: 'bold' }}>{m.memberID || 'N/A'}</td>
                     <td>
-                      <span className="member-name-cell">{m.fullName}</span>
+                      <span 
+                        className="member-name-cell"
+                        onClick={() => onViewProfile && onViewProfile(m)}
+                        style={{ cursor: 'pointer', color: 'var(--brand-primary)', fontWeight: 700 }}
+                        title="Click to view full member profile"
+                      >
+                        {m.fullName}
+                      </span>
                     </td>
                     <td>{m.phoneNumber}</td>
                     <td>{m.dob}</td>
@@ -195,12 +304,13 @@ export default function MemberManagement({
                     </td>
                     <td>
                       <span style={{
-                        padding: '4px 8px',
+                        padding: '4px 10px',
                         borderRadius: 'var(--radius-round)',
                         fontSize: '11px',
-                        fontWeight: 'bold',
-                        backgroundColor: m.status === 'ACTIVE' ? 'rgba(75, 190, 4, 0.15)' : 'rgba(239, 68, 68, 0.12)',
-                        color: m.status === 'ACTIVE' ? '#2e7d32' : 'var(--color-error)'
+                        fontWeight: '700',
+                        backgroundColor: m.status === 'ACTIVE' ? 'var(--color-success-bg)' : 'var(--color-error-bg)',
+                        color: m.status === 'ACTIVE' ? 'var(--color-success)' : 'var(--color-error)',
+                        border: `1px solid ${m.status === 'ACTIVE' ? 'rgba(22, 163, 74, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
                       }}>
                         {m.status}
                       </span>
@@ -209,10 +319,17 @@ export default function MemberManagement({
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <Button
                           variant="secondary"
+                          onClick={() => onViewProfile && onViewProfile(m)}
+                          style={{ minHeight: '32px', padding: '4px 10px', fontSize: '12px', width: 'auto' }}
+                        >
+                          View Profile
+                        </Button>
+                        <Button
+                          variant="secondary"
                           onClick={() => handleEditClick(m)}
                           style={{ minHeight: '32px', padding: '4px 10px', fontSize: '12px', width: 'auto' }}
                         >
-                          Edit Profile
+                          Edit
                         </Button>
                         <Button
                           variant="ghost"

@@ -3,6 +3,8 @@ import useGymApi from './hooks/useGymApi';
 import LoginForm from './components/features/LoginForm';
 import PaymentModal from './components/features/PaymentModal';
 import ReceiptCard from './components/features/ReceiptCard';
+import MemberProfileModal from './components/features/MemberProfileModal';
+import MembershipFormModal from './components/features/MembershipFormModal';
 import Modal from './components/ui/Modal';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -67,7 +69,15 @@ export default function App() {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [pendingSubscription, setPendingSubscription] = useState(null);
   const [activeReceipt, setActiveReceipt] = useState(null);
+  const [profileMember, setProfileMember] = useState(null);
+  const [directSubMemberID, setDirectSubMemberID] = useState(null);
   const [paymentError, setPaymentError] = useState('');
+
+  const handleSubscribeFromProfile = (member) => {
+    const rawId = member.id || member.memberID;
+    setProfileMember(null);
+    setDirectSubMemberID(String(rawId));
+  };
 
   // Set default planID once plans load
   useEffect(() => {
@@ -319,6 +329,7 @@ export default function App() {
             onDeleteMember={handleDeleteMember}
             onEditMember={handleEditMember}
             onPayPending={handlePayPending}
+            onViewProfile={setProfileMember}
           />
         )}
 
@@ -345,9 +356,12 @@ export default function App() {
         {activeView === 'members' && (
           <MemberManagement
             members={members}
+            recentMembers={recentMembers}
+            plans={plans}
             onRegisterMember={registerMember}
             onUpdateMember={updateMember}
             onDeleteMember={handleDeleteMember}
+            onViewProfile={setProfileMember}
             cashier={cashier}
             onShowAdminWarning={() => setAdminWarningOpen(true)}
           />
@@ -360,6 +374,7 @@ export default function App() {
             plans={plans}
             onCreateMembership={handleCreateSubscriptionDirect}
             onPayPending={handlePayPending}
+            onViewProfile={setProfileMember}
             onCancelMembership={async (id) => {
               try {
                 await cancelMembership(id);
@@ -428,6 +443,32 @@ export default function App() {
             onReset={handleResetFlow}
           />
         </Modal>
+      )}
+
+      {profileMember && (
+        <MemberProfileModal
+          isOpen={!!profileMember}
+          onClose={() => setProfileMember(null)}
+          member={profileMember}
+          recentMembers={recentMembers}
+          payments={payments}
+          onSubscribeMember={handleSubscribeFromProfile}
+        />
+      )}
+
+      {directSubMemberID && (
+        <MembershipFormModal
+          isOpen={!!directSubMemberID}
+          onClose={() => setDirectSubMemberID(null)}
+          onSubmit={async (payload) => {
+            await handleCreateSubscriptionDirect(payload);
+            setDirectSubMemberID(null);
+          }}
+          members={members}
+          plans={plans}
+          initialMemberID={directSubMemberID}
+          isLoading={isLoading}
+        />
       )}
 
       <AdminWarningModal

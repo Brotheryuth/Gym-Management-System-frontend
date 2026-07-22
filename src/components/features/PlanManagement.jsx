@@ -201,7 +201,7 @@ export default function PlanManagement({
                 <h4 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 12px' }}>{p.planName}</h4>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' }}>
                   <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--accent-blue)' }}>${Number(p.planPrice).toFixed(2)}</span>
-                  <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>/ {p.duration} Days</span>
+                  <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>/ {p.duration} {p.duration === 1 ? 'Month' : 'Months'}</span>
                 </div>
               </div>
               
@@ -264,9 +264,9 @@ export default function PlanManagement({
               step="0.01"
             />
             <InputField
-              label="Duration (Days)"
+              label="Duration (Months)"
               type="number"
-              placeholder="e.g. 30"
+              placeholder="e.g. 1"
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
             />

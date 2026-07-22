@@ -9,7 +9,8 @@ export default function MembershipFormModal({
   onSubmit,
   members = [],
   plans = [],
-  isLoading = false
+  isLoading = false,
+  initialMemberID = ''
 }) {
   const [memberID, setMemberID] = useState('');
   const [planID, setPlanID] = useState('');
@@ -21,14 +22,15 @@ export default function MembershipFormModal({
 
   useEffect(() => {
     if (isOpen) {
-      setMemberID(members[0]?.memberID || '');
+      const defaultId = initialMemberID || members[0]?.memberID || members[0]?.id || '';
+      setMemberID(String(defaultId));
       setPlanID(plans[0]?.planID || '');
       setStartDate(new Date().toISOString().split('T')[0]);
       setDiscount('0');
       setPaymentMethod('KHQR');
       setErrors({});
     }
-  }, [isOpen, members, plans]);
+  }, [isOpen, members, plans, initialMemberID]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -58,7 +60,9 @@ export default function MembershipFormModal({
     e.preventDefault();
     if (!validateForm()) return;
 
-    const selectedMemberObj = members.find(m => m.memberID === memberID);
+    const selectedMemberObj = members.find(
+      m => String(m.memberID) === String(memberID) || String(m.id) === String(memberID)
+    );
     
     onSubmit({
       memberID,

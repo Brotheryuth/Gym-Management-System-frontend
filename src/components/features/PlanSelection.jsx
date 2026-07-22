@@ -26,7 +26,7 @@ export default function PlanSelection({
   const planOptions = useMemo(() => {
     return plans.map(p => ({
       value: p.planID,
-      label: `${p.planName} ($${p.planPrice.toFixed(2)} - ${p.duration} Days)`
+      label: `${p.planName} ($${p.planPrice.toFixed(2)} - ${p.duration} ${p.duration === 1 ? 'Month' : 'Months'})`
     }));
   }, [plans]);
 

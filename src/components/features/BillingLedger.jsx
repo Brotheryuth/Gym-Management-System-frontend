@@ -146,7 +146,7 @@ export default function BillingLedger({
           </div>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
+        <div className="dashboard-table-container">
           <table className="dashboard-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
@@ -186,28 +186,33 @@ export default function BillingLedger({
                       </td>
                       <td>
                         <span style={{
-                          padding: '2px 6px',
-                          borderRadius: '4px',
+                          padding: '3px 8px',
+                          borderRadius: 'var(--radius-sm)',
                           fontSize: '11px',
                           fontWeight: 700,
-                          backgroundColor: 'rgba(57, 113, 184, 0.08)',
-                          color: 'var(--accent-blue)'
+                          backgroundColor: 'var(--accent-secondary-light)',
+                          color: 'var(--accent-secondary)',
+                          border: '1px solid var(--accent-secondary-border)'
                         }}>
                           {p.method || 'KHQR'}
                         </span>
                       </td>
                       <td>
                         <span style={{
-                          padding: '4px 8px',
+                          padding: '4px 10px',
                           borderRadius: 'var(--radius-round)',
                           fontSize: '11px',
-                          fontWeight: 'bold',
+                          fontWeight: '700',
                           backgroundColor: 
-                            p.status === 'PAID' ? 'rgba(75, 190, 4, 0.15)' : 
-                            p.status === 'REFUNDED' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(52, 59, 27, 0.08)',
+                            p.status === 'PAID' ? 'var(--color-success-bg)' : 
+                            p.status === 'REFUNDED' ? 'var(--color-error-bg)' : 'var(--color-pending-bg)',
                           color: 
-                            p.status === 'PAID' ? '#2e7d32' : 
-                            p.status === 'REFUNDED' ? 'var(--color-error)' : 'var(--text-muted)'
+                            p.status === 'PAID' ? 'var(--color-success)' : 
+                            p.status === 'REFUNDED' ? 'var(--color-error)' : 'var(--color-pending)',
+                          border: `1px solid ${
+                            p.status === 'PAID' ? 'rgba(22, 163, 74, 0.25)' : 
+                            p.status === 'REFUNDED' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(217, 119, 6, 0.25)'
+                          }`
                         }}>
                           {p.status}
                         </span>

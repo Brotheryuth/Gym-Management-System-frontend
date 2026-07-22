@@ -46,11 +46,11 @@ export default function RegistrationWorkflow({
         {/* Back CTA Button */}
         <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '8px' }}>
           <Button 
-            variant="outline"
+            variant="secondary"
             onClick={handleResetFlow}
-            style={{ width: 'auto', minHeight: '38px', padding: '6px 16px', fontSize: '13px' }}
+            style={{ width: 'auto', minHeight: '38px', padding: '6px 16px', fontSize: '13px', color: 'var(--text-muted)', border: '1.5px solid var(--color-border)', backgroundColor: 'transparent' }}
           >
-            Back to Dashboard
+            ← Back to Dashboard
           </Button>
         </div>
 

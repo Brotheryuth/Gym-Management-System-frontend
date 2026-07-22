@@ -14,8 +14,8 @@ export default function ReceiptCard({
   const getExpiryDate = () => {
     try {
       const start = new Date(receiptData.startDate || new Date());
-      const days = planDetails ? planDetails.duration : 30;
-      start.setDate(start.getDate() + days);
+      const months = planDetails ? Number(planDetails.duration) || 1 : 1;
+      start.setMonth(start.getMonth() + months);
       return start.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
     } catch (e) {
       return 'N/A';

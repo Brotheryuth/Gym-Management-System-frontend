@@ -104,7 +104,7 @@ export default function Button({
       <style>{`
         .btn-primary:not(:disabled):hover {
           background-color: var(--accent-blue-hover) !important;
-          box-shadow: 0 6px 16px rgba(57, 113, 184, 0.3) !important;
+          box-shadow: 0 6px 16px rgba(249, 87, 0, 0.35) !important;
           transform: translateY(-1px);
         }
         .btn-primary:not(:disabled):active {

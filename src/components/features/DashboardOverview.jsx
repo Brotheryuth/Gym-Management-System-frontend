@@ -11,7 +11,8 @@ export default function DashboardOverview({
   recentMembers = [],
   payments = [],
   setActiveView,
-  onPayPending
+  onPayPending,
+  onViewProfile
 }) {
   const todayStr = new Date().toISOString().split('T')[0];
   
@@ -20,20 +21,37 @@ export default function DashboardOverview({
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-  // 1. Calculations for dynamic dashboard metrics
-  const todayPayments = payments.filter(p => {
-    if (p.status !== 'PAID') return false;
-    const pDate = p.paymentDate || p.createAt;
-    return pDate && String(pDate).startsWith(todayStr);
-  });
-  const todaySales = todayPayments.reduce((sum, p) => sum + p.finalAmount, 0);
+  // Helper functions for safe metric extraction
+  const isPaymentPaid = (p) => {
+    if (!p) return false;
+    const st = String(p.status || '').toUpperCase();
+    return st === 'PAID' || st === 'COMPLETED' || st === 'SUCCESS';
+  };
 
-  const yesterdayPayments = payments.filter(p => {
-    if (p.status !== 'PAID') return false;
-    const pDate = p.paymentDate || p.createAt;
-    return pDate && String(pDate).startsWith(yesterdayStr);
-  });
-  const yesterdaySales = yesterdayPayments.reduce((sum, p) => sum + p.finalAmount, 0);
+  const getPaymentAmount = (p) => {
+    if (!p) return 0;
+    const val = p.finalAmount !== undefined ? p.finalAmount : (p.baseAmount !== undefined ? p.baseAmount : p.amount);
+    return Number(val) || 0;
+  };
+
+  const isDateToday = (dateStr) => {
+    if (!dateStr) return false;
+    const str = String(dateStr);
+    return str.startsWith(todayStr) || str.includes(todayStr);
+  };
+
+  const isDateYesterday = (dateStr) => {
+    if (!dateStr) return false;
+    const str = String(dateStr);
+    return str.startsWith(yesterdayStr) || str.includes(yesterdayStr);
+  };
+
+  // 1. Calculations for dynamic dashboard metrics
+  const todayPayments = payments.filter(p => isPaymentPaid(p) && isDateToday(p.paymentDate || p.createAt));
+  const todaySales = todayPayments.reduce((sum, p) => sum + getPaymentAmount(p), 0);
+
+  const yesterdayPayments = payments.filter(p => isPaymentPaid(p) && isDateYesterday(p.paymentDate || p.createAt));
+  const yesterdaySales = yesterdayPayments.reduce((sum, p) => sum + getPaymentAmount(p), 0);
 
   let salesChangePercent = 0;
   if (yesterdaySales > 0) {
@@ -46,7 +64,7 @@ export default function DashboardOverview({
   const activeMembersCount = recentMembers.filter(m => m.status === 'ACTIVE').length;
   const activeMembersYesterday = recentMembers.filter(m => {
     if (m.status !== 'ACTIVE') return false;
-    return !m.startDate || !String(m.startDate).startsWith(todayStr);
+    return !m.startDate || !isDateToday(m.startDate);
   }).length;
 
   let activeChangePercent = 0;
@@ -55,13 +73,8 @@ export default function DashboardOverview({
   }
 
   // Today's New Clients
-  const todayNewMembersCount = recentMembers.filter(m => {
-    return m.startDate && String(m.startDate).startsWith(todayStr);
-  }).length;
-
-  const yesterdayNewMembersCount = recentMembers.filter(m => {
-    return m.startDate && String(m.startDate).startsWith(yesterdayStr);
-  }).length;
+  const todayNewMembersCount = recentMembers.filter(m => isDateToday(m.startDate)).length;
+  const yesterdayNewMembersCount = recentMembers.filter(m => isDateYesterday(m.startDate)).length;
 
   let newClientsChangePercent = 0;
   if (yesterdayNewMembersCount > 0) {
@@ -71,14 +84,13 @@ export default function DashboardOverview({
   }
 
   // All-time Total Revenue
-  const totalSales = payments
-    .filter(p => p.status === 'PAID')
-    .reduce((sum, p) => sum + p.finalAmount, 0);
+  const paidPayments = payments.filter(isPaymentPaid);
+  const totalSales = paidPayments.reduce((sum, p) => sum + getPaymentAmount(p), 0);
 
   // 2. Gateway distribution data
-  const khqrSum = payments.filter(p => p.status === 'PAID' && p.method === 'KHQR').reduce((s, p) => s + p.finalAmount, 0);
-  const cashSum = payments.filter(p => p.status === 'PAID' && (p.method === 'BYCASH' || p.method === 'CASH')).reduce((s, p) => s + p.finalAmount, 0);
-  const cardSum = payments.filter(p => p.status === 'PAID' && p.method === 'CREDITCARD').reduce((s, p) => s + p.finalAmount, 0);
+  const khqrSum = payments.filter(p => isPaymentPaid(p) && String(p.method || '').toUpperCase().includes('KHQR')).reduce((s, p) => s + getPaymentAmount(p), 0);
+  const cashSum = payments.filter(p => isPaymentPaid(p) && String(p.method || '').toUpperCase().includes('CASH')).reduce((s, p) => s + getPaymentAmount(p), 0);
+  const cardSum = payments.filter(p => isPaymentPaid(p) && (String(p.method || '').toUpperCase().includes('CARD') || String(p.method || '').toUpperCase().includes('CREDIT'))).reduce((s, p) => s + getPaymentAmount(p), 0);
   
   const gatewayTotal = khqrSum + cashSum + cardSum || 1;
   const khqrPct = Math.round((khqrSum / gatewayTotal) * 100);
@@ -164,25 +176,37 @@ export default function DashboardOverview({
     <div className="dashboard-overview-container">
       
       {/* Welcome & Command Header */}
-      <div className="purity-card" style={{
+      <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, var(--brand-primary) 0%, #295b96 100%)',
+        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
         color: '#ffffff',
-        border: 'none',
-        padding: '24px 32px',
+        border: '1px solid var(--color-border)',
+        padding: '28px 32px',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        borderRadius: 'var(--radius-lg)'
       }}>
         <div style={{ position: 'relative', zIndex: 2 }}>
-          <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent-warm)', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+          <span style={{ 
+            fontSize: '11px', 
+            fontWeight: 800, 
+            color: 'var(--brand-primary)', 
+            backgroundColor: 'rgba(234, 88, 12, 0.15)',
+            padding: '4px 10px',
+            borderRadius: 'var(--radius-round)',
+            textTransform: 'uppercase', 
+            letterSpacing: '1.2px',
+            display: 'inline-block',
+            marginBottom: '8px'
+          }}>
             Operational Dashboard
           </span>
-          <h2 style={{ fontSize: '24px', fontWeight: 800, marginTop: '6px', fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#FFFFFF', fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>
             Cashier Control Center
           </h2>
-          <p style={{ fontSize: '13.5px', color: 'rgba(255, 255, 255, 0.85)', marginTop: '8px', maxWidth: '520px', lineHeight: '1.5' }}>
+          <p style={{ fontSize: '13.5px', color: '#94A3B8', marginTop: '6px', maxWidth: '520px', lineHeight: '1.5' }}>
             Monitor real-time payments, audit active subscriptions, and process gate entries from one visual control plane.
           </p>
         </div>
@@ -191,16 +215,16 @@ export default function DashboardOverview({
           <Button
             onClick={() => setActiveView('register')}
             style={{
-              background: 'var(--accent-warm)',
-              color: 'var(--text-primary)',
+              background: 'var(--brand-primary)',
+              color: '#ffffff',
               border: 'none',
               fontWeight: 700,
-              padding: '10px 20px',
+              padding: '12px 24px',
               borderRadius: 'var(--radius-sm)',
-              boxShadow: '0 4px 12px rgba(230, 161, 0, 0.2)'
+              boxShadow: '0 4px 14px rgba(234, 88, 12, 0.3)'
             }}
           >
-            Checkout Subscription
+            + Register Member Profile
           </Button>
         </div>
 
@@ -208,11 +232,11 @@ export default function DashboardOverview({
         <div style={{
           position: 'absolute',
           right: '-50px',
-          top: '-50px',
+          bottom: '-50px',
           width: '220px',
           height: '220px',
-          background: 'rgba(255, 255, 255, 0.03)',
-          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(234, 88, 12, 0.15) 0%, rgba(0, 0, 0, 0) 70%)',
+          pointerEvents: 'none',
           zIndex: 1
         }} />
       </div>

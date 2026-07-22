@@ -11,10 +11,14 @@ export default function MembershipManagement({
   onCreateMembership,
   onPayPending,
   onCancelMembership,
+  onViewProfile,
   cashier,
   onShowAdminWarning
 }) {
   const [search, setSearch] = useState('');
+  const [genderFilter, setGenderFilter] = useState('ALL');
+  const [planFilter, setPlanFilter] = useState('ALL');
+  const [sortBy, setSortBy] = useState('DEFAULT');
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,15 +29,27 @@ export default function MembershipManagement({
   const pendingCount = recentMembers.filter(m => m.status === 'PENDING').length;
   const otherCount = recentMembers.length - activeCount - pendingCount;
 
-  // 2. Filter memberships list
-  const filtered = recentMembers.filter(m => {
-    const term = search.toLowerCase();
-    return (
-      (m.fullName && m.fullName.toLowerCase().includes(term)) ||
-      (m.planName && m.planName.toLowerCase().includes(term)) ||
-      (m.memberID && m.memberID.toLowerCase().includes(term))
-    );
-  });
+  // 2. Filter & Sort memberships list
+  const filtered = recentMembers
+    .filter(m => {
+      const term = search.toLowerCase();
+      const matchesSearch = (
+        (m.fullName && m.fullName.toLowerCase().includes(term)) ||
+        (m.planName && m.planName.toLowerCase().includes(term)) ||
+        (m.memberID && String(m.memberID).toLowerCase().includes(term))
+      );
+      const matchesGender = genderFilter === 'ALL' || m.gender === genderFilter;
+      const matchesPlan = planFilter === 'ALL' || m.planName === planFilter;
+      return matchesSearch && matchesGender && matchesPlan;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'NAME_ASC') return (a.fullName || '').localeCompare(b.fullName || '');
+      if (sortBy === 'NAME_DESC') return (b.fullName || '').localeCompare(a.fullName || '');
+      if (sortBy === 'GENDER') return (a.gender || '').localeCompare(b.gender || '');
+      if (sortBy === 'PLAN') return (a.planName || '').localeCompare(b.planName || '');
+      if (sortBy === 'STATUS') return (a.status || '').localeCompare(b.status || '');
+      return 0;
+    });
 
   const handleCancel = (membershipID) => {
     if (cashier?.role !== 'ADMIN') {
@@ -122,16 +138,85 @@ export default function MembershipManagement({
             </svg>
             Active Gym Subscriptions
           </h3>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ width: '250px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ width: '210px' }}>
               <InputField
-                placeholder="Search by member or plan..."
+                placeholder="Search member or plan..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="mb-0"
                 style={{ margin: 0 }}
               />
             </div>
+
+            {/* Gender Filter */}
+            <select
+              value={genderFilter}
+              onChange={(e) => setGenderFilter(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1.5px solid var(--color-border)',
+                backgroundColor: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              <option value="ALL">All Genders</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+
+            {/* Plan Filter */}
+            <select
+              value={planFilter}
+              onChange={(e) => setPlanFilter(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1.5px solid var(--color-border)',
+                backgroundColor: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              <option value="ALL">All Plans</option>
+              {plans.map(p => (
+                <option key={p.planID} value={p.planName}>{p.planName}</option>
+              ))}
+            </select>
+
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1.5px solid var(--color-border)',
+                backgroundColor: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              <option value="DEFAULT">Sort by Default</option>
+              <option value="NAME_ASC">Name (A-Z)</option>
+              <option value="NAME_DESC">Name (Z-A)</option>
+              <option value="GENDER">Gender</option>
+              <option value="PLAN">Gym Plan</option>
+              <option value="STATUS">Status</option>
+            </select>
+
             <Button
               onClick={handleAddMembershipClick}
               style={{ width: 'auto', minHeight: '38px', padding: '6px 16px', fontSize: '13px' }}
@@ -141,7 +226,7 @@ export default function MembershipManagement({
           </div>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
+        <div className="dashboard-table-container">
           <table className="dashboard-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
@@ -163,7 +248,15 @@ export default function MembershipManagement({
               ) : (
                 filtered.map((m, idx) => (
                   <tr key={m.id ? `ms-${m.id}-${idx}` : `mem-${m.memberID}-${idx}`}>
-                    <td style={{ fontWeight: 'bold' }}>{m.fullName}</td>
+                    <td>
+                      <span 
+                        onClick={() => onViewProfile && onViewProfile(m)}
+                        style={{ cursor: 'pointer', color: 'var(--brand-primary)', fontWeight: 700 }}
+                        title="Click to view full member profile"
+                      >
+                        {m.fullName}
+                      </span>
+                    </td>
                     <td>
                       <span style={{
                         padding: '4px 8px',
@@ -181,22 +274,33 @@ export default function MembershipManagement({
                     <td>{m.endDate || 'N/A'}</td>
                     <td>
                       <span style={{
-                        padding: '4px 8px',
+                        padding: '4px 10px',
                         borderRadius: 'var(--radius-round)',
                         fontSize: '11px',
-                        fontWeight: 'bold',
+                        fontWeight: '700',
                         backgroundColor: 
-                          m.status === 'ACTIVE' ? 'rgba(75, 190, 4, 0.15)' : 
-                          m.status === 'PENDING' ? 'rgba(230, 161, 0, 0.15)' : 'rgba(239, 68, 68, 0.12)',
+                          m.status === 'ACTIVE' ? 'var(--color-success-bg)' : 
+                          m.status === 'PENDING' ? 'var(--color-pending-bg)' : 'var(--color-error-bg)',
                         color: 
-                          m.status === 'ACTIVE' ? '#2e7d32' : 
-                          m.status === 'PENDING' ? '#b27a00' : 'var(--color-error)'
+                          m.status === 'ACTIVE' ? 'var(--color-success)' : 
+                          m.status === 'PENDING' ? 'var(--color-pending)' : 'var(--color-error)',
+                        border: `1px solid ${
+                          m.status === 'ACTIVE' ? 'rgba(22, 163, 74, 0.25)' : 
+                          m.status === 'PENDING' ? 'rgba(217, 119, 6, 0.25)' : 'rgba(239, 68, 68, 0.25)'
+                        }`
                       }}>
                         {m.status}
                       </span>
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '8px' }}>
+                        <Button
+                          variant="secondary"
+                          onClick={() => onViewProfile && onViewProfile(m)}
+                          style={{ minHeight: '32px', padding: '4px 10px', fontSize: '12px', width: 'auto' }}
+                        >
+                          Profile
+                        </Button>
                         {m.status === 'PENDING' && (
                           <Button
                             variant="secondary"

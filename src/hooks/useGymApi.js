@@ -35,8 +35,8 @@ export default function useGymApi() {
   const refreshDatabase = useCallback(async () => {
     try {
       const [memRes, payRes, membersRes] = await Promise.all([
-        fetch('/api/memberships'),
-        fetch('/api/payments'),
+        fetch('/api/memberships').catch(() => ({ ok: false })),
+        fetch('/api/payments').catch(() => ({ ok: false })),
         fetch('/api/members').catch(() => ({ ok: false }))
       ]);
 
