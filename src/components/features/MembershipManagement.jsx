@@ -19,6 +19,7 @@ export default function MembershipManagement({
   const [search, setSearch] = useState('');
   const [genderFilter, setGenderFilter] = useState('ALL');
   const [planFilter, setPlanFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [sortBy, setSortBy] = useState('DEFAULT');
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -31,6 +32,14 @@ export default function MembershipManagement({
   const pendingCount = recentMembers.filter(m => m.status === 'PENDING').length;
   const otherCount = recentMembers.length - activeCount - pendingCount;
 
+  const getDaysRemaining = (endDateStr) => {
+    if (!endDateStr || endDateStr === 'N/A') return null;
+    const end = new Date(endDateStr);
+    const now = new Date();
+    if (isNaN(end.getTime())) return null;
+    return Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
   // 2. Filter & Sort memberships list
   const filtered = recentMembers
     .filter(m => {
@@ -41,10 +50,28 @@ export default function MembershipManagement({
         (m.memberID && String(m.memberID).toLowerCase().includes(term))
       );
       const matchesGender = genderFilter === 'ALL' || m.gender === genderFilter;
-      const matchesPlan = planFilter === 'ALL' || m.planName === planFilter;
-      return matchesSearch && matchesGender && matchesPlan;
+      const matchesPlan = planFilter === 'ALL' || (
+        planFilter === 'EXPIRING_SOON'
+          ? (m.status === 'ACTIVE' && (() => {
+              const days = getDaysRemaining(m.endDate);
+              return days !== null && days >= 0 && days <= 7;
+            })())
+          : m.planName === planFilter
+      );
+      const matchesStatus = statusFilter === 'ALL' || String(m.status).toUpperCase() === statusFilter;
+      return matchesSearch && matchesGender && matchesPlan && matchesStatus;
     })
     .sort((a, b) => {
+      if (sortBy === 'PENDING_FIRST') {
+        const isPenA = a.status === 'PENDING' ? 0 : 1;
+        const isPenB = b.status === 'PENDING' ? 0 : 1;
+        return isPenA - isPenB;
+      }
+      if (sortBy === 'EXPIRING_SOON_FIRST') {
+        const daysA = getDaysRemaining(a.endDate) ?? 999;
+        const daysB = getDaysRemaining(b.endDate) ?? 999;
+        return daysA - daysB;
+      }
       if (sortBy === 'NAME_ASC') return (a.fullName || '').localeCompare(b.fullName || '');
       if (sortBy === 'NAME_DESC') return (b.fullName || '').localeCompare(a.fullName || '');
       if (sortBy === 'GENDER') return (a.gender || '').localeCompare(b.gender || '');
@@ -99,7 +126,12 @@ export default function MembershipManagement({
           </div>
         </div>
 
-        <div className="purity-card purity-metric-card">
+        <div 
+          className="purity-card purity-metric-card" 
+          onClick={() => { setStatusFilter(statusFilter === 'PENDING' ? 'ALL' : 'PENDING'); setCurrentPage(1); }}
+          style={{ cursor: 'pointer', border: statusFilter === 'PENDING' ? '2px solid #e6a100' : '1px solid var(--color-border)', transition: 'all 0.2s ease' }}
+          title="Click to filter by Pending Payment"
+        >
           <div className="purity-metric-info">
             <h5>Pending Cash/KHQR</h5>
             <div className="purity-metric-value-row">
@@ -154,6 +186,28 @@ export default function MembershipManagement({
               />
             </div>
 
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1.5px solid var(--color-border)',
+                backgroundColor: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="ACTIVE">Active Only</option>
+              <option value="PENDING">⏳ Pending Payment Only</option>
+              <option value="EXPIRED">Expired / Inactive</option>
+            </select>
+
             {/* Gender Filter */}
             <select
               value={genderFilter}
@@ -193,6 +247,7 @@ export default function MembershipManagement({
               }}
             >
               <option value="ALL">All Plans</option>
+              <option value="EXPIRING_SOON"> Expiring Soon (&lt; 7 Days)</option>
               {plans.map(p => (
                 <option key={p.planID} value={p.planName}>{p.planName}</option>
               ))}
@@ -215,6 +270,8 @@ export default function MembershipManagement({
               }}
             >
               <option value="DEFAULT">Sort by Default</option>
+              <option value="PENDING_FIRST">Pending Payment </option>
+              <option value="EXPIRING_SOON_FIRST"> Expiring Soon First</option>
               <option value="NAME_ASC">Name (A-Z)</option>
               <option value="NAME_DESC">Name (Z-A)</option>
               <option value="GENDER">Gender</option>
@@ -276,7 +333,29 @@ export default function MembershipManagement({
                       </span>
                     </td>
                     <td>{m.startDate || 'N/A'}</td>
-                    <td>{m.endDate || 'N/A'}</td>
+                    <td>
+                      {m.endDate || 'N/A'}
+                      {(() => {
+                        const days = getDaysRemaining(m.endDate);
+                        if (m.status === 'ACTIVE' && days !== null && days >= 0 && days <= 7) {
+                          return (
+                            <span style={{
+                              marginLeft: '8px',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              backgroundColor: 'var(--color-pending-bg)',
+                              color: 'var(--color-pending)',
+                              border: '1px solid rgba(217, 119, 6, 0.3)'
+                            }}>
+                               {days}d left
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </td>
                     <td>
                       <span style={{
                         padding: '4px 10px',

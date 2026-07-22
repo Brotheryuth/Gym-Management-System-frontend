@@ -83,6 +83,16 @@ export default function DashboardOverview({
     newClientsChangePercent = 100;
   }
 
+  // Expiring Soon (<7 Days) calculation
+  const expiringSoonCount = recentMembers.filter(m => {
+    if (!m.endDate || m.endDate === 'N/A' || String(m.status).toUpperCase() !== 'ACTIVE') return false;
+    const end = new Date(m.endDate);
+    const now = new Date();
+    if (isNaN(end.getTime())) return false;
+    const diffDays = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 && diffDays <= 7;
+  }).length;
+
   // All-time Total Revenue
   const paidPayments = payments.filter(isPaymentPaid);
   const totalSales = paidPayments.reduce((sum, p) => sum + getPaymentAmount(p), 0);
@@ -252,6 +262,7 @@ export default function DashboardOverview({
         totalSales={totalSales}
         revenueGoalPct={revenueGoalPct}
         capacityGoalPct={capacityGoalPct}
+        expiringSoonCount={expiringSoonCount}
       />
 
       {/* Graphical Breakdown Row */}

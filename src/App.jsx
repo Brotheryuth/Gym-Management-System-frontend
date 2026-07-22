@@ -362,6 +362,7 @@ export default function App() {
             onUpdateMember={updateMember}
             onDeleteMember={handleDeleteMember}
             onViewProfile={setProfileMember}
+            onSubscribeMember={handleSubscribeFromProfile}
             cashier={cashier}
             onShowAdminWarning={() => setAdminWarningOpen(true)}
           />

@@ -9,7 +9,8 @@ export default function MetricCards({
   newClientsChangePercent = 0,
   totalSales = 0,
   revenueGoalPct = 0,
-  capacityGoalPct = 0
+  capacityGoalPct = 0,
+  expiringSoonCount = 0
 }) {
   const newClientsGoalPct = Math.min(100, todayNewMembersCount * 10);
 
@@ -42,7 +43,7 @@ export default function MetricCards({
         </div>
       </div>
 
-      {/* 2. Active Members */}
+      {/* 2. Active Members & Expiring Soon Insight */}
       <div className="purity-card purity-metric-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
@@ -51,17 +52,24 @@ export default function MetricCards({
               {activeMembersCount}
             </div>
           </div>
-          <div className={`purity-change-badge ${activeChangePercent >= 0 ? 'plus' : 'minus'}`} style={{
-            background: activeChangePercent >= 0 ? 'var(--color-success-bg)' : 'var(--color-error-bg)',
-            color: activeChangePercent >= 0 ? 'var(--color-success)' : 'var(--color-error)'
-          }}>
-            {activeChangePercent >= 0 ? `+${activeChangePercent}%` : `${activeChangePercent}%`}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+            <div className={`purity-change-badge ${activeChangePercent >= 0 ? 'plus' : 'minus'}`} style={{
+              background: activeChangePercent >= 0 ? 'var(--color-success-bg)' : 'var(--color-error-bg)',
+              color: activeChangePercent >= 0 ? 'var(--color-success)' : 'var(--color-error)'
+            }}>
+              {activeChangePercent >= 0 ? `+${activeChangePercent}%` : `${activeChangePercent}%`}
+            </div>
           </div>
         </div>
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
             <span>Capacity (150 max)</span>
-            <span style={{ fontWeight: 700 }}>{capacityGoalPct}%</span>
+            <span style={{
+              fontWeight: 700,
+              color: expiringSoonCount > 0 ? 'var(--color-pending)' : 'var(--text-muted)'
+            }}>
+              {expiringSoonCount > 0 ? `⚠️ ${expiringSoonCount} Expiring Soon (<7d)` : `${capacityGoalPct}% Capacity`}
+            </span>
           </div>
           <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
             <div style={{ width: `${capacityGoalPct}%`, height: '100%', background: '#4bbe04', borderRadius: '3px', transition: 'width 0.5s ease-in-out' }} />

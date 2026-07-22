@@ -17,18 +17,31 @@ export default function useGymApi() {
 
   // Helper mapping function for Membership objects
   const mapMemberships = useCallback((memData) => {
-    return memData.map(m => ({
-      id: m.id,
-      memberID: m.member?.id || 'N/A',
-      fullName: m.member?.fullName || 'N/A',
-      phoneNumber: m.member?.phoneNumber || 'N/A',
-      dob: m.member?.dob || 'N/A',
-      gender: m.member?.gender || 'OTHER',
-      planName: m.plan?.planName || 'N/A',
-      status: m.status || 'PENDING',
-      startDate: m.startDate || 'N/A',
-      endDate: m.endDate || 'N/A'
-    }));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return memData.map(m => {
+      let calcStatus = m.status || 'PENDING';
+      if (m.endDate && m.endDate !== 'N/A' && calcStatus === 'ACTIVE') {
+        const end = new Date(m.endDate);
+        if (!isNaN(end.getTime()) && end < today) {
+          calcStatus = 'EXPIRED';
+        }
+      }
+
+      return {
+        id: m.id,
+        memberID: m.member?.id || 'N/A',
+        fullName: m.member?.fullName || 'N/A',
+        phoneNumber: m.member?.phoneNumber || 'N/A',
+        dob: m.member?.dob || 'N/A',
+        gender: m.member?.gender || 'OTHER',
+        planName: m.plan?.planName || 'N/A',
+        status: calcStatus,
+        startDate: m.startDate || 'N/A',
+        endDate: m.endDate || 'N/A'
+      };
+    });
   }, []);
 
   // Synchronize dashboard lists from backend

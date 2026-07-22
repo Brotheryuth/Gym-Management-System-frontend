@@ -13,6 +13,7 @@ export default function MemberManagement({
   onUpdateMember,
   onDeleteMember,
   onViewProfile,
+  onSubscribeMember,
   cashier,
   onShowAdminWarning
 }) {
@@ -321,7 +322,7 @@ export default function MemberManagement({
                       </span>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <Button
                           variant="secondary"
                           onClick={() => onViewProfile && onViewProfile(m)}
@@ -329,6 +330,21 @@ export default function MemberManagement({
                         >
                           View Profile
                         </Button>
+                        {onSubscribeMember && (
+                          <Button
+                            onClick={() => onSubscribeMember(m)}
+                            style={{
+                              minHeight: '32px',
+                              padding: '4px 10px',
+                              fontSize: '12px',
+                              width: 'auto',
+                              backgroundColor: 'var(--brand-primary)',
+                              color: '#ffffff'
+                            }}
+                          >
+                            + Add Membership
+                          </Button>
+                        )}
                         <Button
                           variant="secondary"
                           onClick={() => handleEditClick(m)}
