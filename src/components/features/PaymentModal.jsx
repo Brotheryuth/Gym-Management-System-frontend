@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import InputField from '../ui/InputField';
+import qrCodeImg from '../../assets/QRcode.png';
 
 export default function PaymentModal({
   isOpen,
@@ -46,8 +47,8 @@ export default function PaymentModal({
   const handleConfirmClick = () => {
     if (paymentMethod === 'BYCASH') {
       const received = parseFloat(cashReceived) || 0;
-      if (received < totalAmount) {
-        setCashError(`Please collect at least $${totalAmount.toFixed(2)} physical cash.`);
+      if (received < (totalAmount || 0)) {
+        setCashError(`Please collect at least $${(totalAmount || 0).toFixed(2)} physical cash.`);
         return;
       }
     }
@@ -89,19 +90,53 @@ export default function PaymentModal({
     }
   ];
 
+  if (!isOpen) return null;
+
   return (
-    <Modal isOpen={isOpen} title="Interactive Terminal Processing" onClose={onClose}>
-      <div className="payment-modal-content">
-        <div className="payment-badge-header">
-          Ref ID: {paymentID}
-        </div>
+    <Modal isOpen={isOpen} onClose={onClose} title="Cashier Terminal Checkout" maxWidth="500px">
+      <div style={{ padding: '8px 4px', textAlign: 'center' }}>
         
-        <p style={{ color: 'var(--text-muted)', marginBottom: '8px' }}>
+        {/* Payment Method Selector Pills */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          backgroundColor: 'var(--color-bg-alt)',
+          padding: '4px',
+          borderRadius: 'var(--radius-md)',
+          marginBottom: '24px'
+        }}>
+          {[
+            { id: 'KHQR', title: 'KHQR Scan' },
+            { id: 'BYCASH', title: 'Physical Cash' },
+            { id: 'CARD', title: 'Credit / Debit Card' }
+          ].map(m => (
+            <button
+              key={m.id}
+              onClick={() => onMethodChange(m.id)}
+              style={{
+                flex: 1,
+                padding: '10px 8px',
+                borderRadius: 'var(--radius-sm)',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '13px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                backgroundColor: paymentMethod === m.id ? 'var(--brand-primary)' : 'transparent',
+                color: paymentMethod === m.id ? '#ffffff' : 'var(--text-muted)'
+              }}
+            >
+              {m.title}
+            </button>
+          ))}
+        </div>
+
+        <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '0 0 4px' }}>
           Processing payment for <strong>{memberName}</strong>
         </p>
         
         <h2 style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 20px' }}>
-          ${totalAmount.toFixed(2)}
+          ${(totalAmount || 0).toFixed(2)}
         </h2>
 
         {error && (
@@ -122,17 +157,18 @@ export default function PaymentModal({
 
         {paymentMethod === 'KHQR' && (
           <div>
-            <div className="qr-code-box">
-              <svg width="140" height="140" viewBox="0 0 100 100" fill="none" stroke="var(--text-primary)" strokeWidth="4">
-                <rect x="5" y="5" width="25" height="25" fill="none" />
-                <rect x="10" y="10" width="15" height="15" fill="var(--text-primary)" />
-                <rect x="70" y="5" width="25" height="25" fill="none" />
-                <rect x="75" y="10" width="15" height="15" fill="var(--text-primary)" />
-                <rect x="5" y="70" width="25" height="25" fill="none" />
-                <rect x="10" y="75" width="15" height="15" fill="var(--text-primary)" />
-                <path d="M40 10h10v10H40zm0 20h10v10H40zm0 20h10v10H40zm20-20h10v10H60zm0 20h10v10H60zm20 20h10v10H80zm0 20h10v10H80z" fill="var(--text-primary)" />
-              </svg>
-              <div className="qr-logo-overlay">KH</div>
+            <div style={{ margin: '0 auto 16px', display: 'flex', justifyContent: 'center' }}>
+              <img 
+                src={qrCodeImg} 
+                alt="KHQR Payment Code" 
+                style={{ 
+                  maxWidth: '240px', 
+                  width: '100%', 
+                  height: 'auto', 
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+                }} 
+              />
             </div>
             <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
               Instruct member to scan this QR code using their banking application

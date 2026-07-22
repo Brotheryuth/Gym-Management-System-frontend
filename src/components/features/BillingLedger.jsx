@@ -169,14 +169,14 @@ export default function BillingLedger({
                   </td>
                 </tr>
               ) : (
-                filtered.map((p) => {
+                filtered.map((p, idx) => {
                   const dateVal = p.paymentDate || p.createAt;
                   const formattedDate = dateVal 
                     ? new Date(dateVal).toLocaleString()
                     : 'N/A';
                   
                   return (
-                    <tr key={p.id}>
+                    <tr key={p.id ? `p-${p.id}-${idx}` : `pay-idx-${idx}`}>
                       <td style={{ fontWeight: 'bold' }}>#{p.id}</td>
                       <td>{getMemberName(p.membershipID)}</td>
                       <td>${Number(p.baseAmount || p.finalAmount).toFixed(2)}</td>

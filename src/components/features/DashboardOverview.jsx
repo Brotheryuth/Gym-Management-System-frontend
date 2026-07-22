@@ -2,6 +2,7 @@ import React from 'react';
 import Button from '../ui/Button';
 import MetricCards from './dashboard/MetricCards';
 import PaymentDistribution from './dashboard/PaymentDistribution';
+import MemberDemographics from './dashboard/MemberDemographics';
 import PeakTraffic from './dashboard/PeakTraffic';
 import LiveCheckoutStream from './dashboard/LiveCheckoutStream';
 import QuickShortcuts from './dashboard/QuickShortcuts';
@@ -84,7 +85,54 @@ export default function DashboardOverview({
   const cashPct = Math.round((cashSum / gatewayTotal) * 100);
   const cardPct = Math.round((cardSum / gatewayTotal) * 100);
 
-  // 3. Hourly traffic Slots
+  // 3. Demographics Calculations
+  const activeMembers = recentMembers.filter(m => m.status === 'ACTIVE');
+  const totalActiveCount = activeMembers.length;
+  
+  const genderStats = { male: 0, female: 0, other: 0 };
+  const ageStats = { under18: 0, range18_25: 0, range26_35: 0, range36_50: 0, above50: 0 };
+
+  activeMembers.forEach(m => {
+    // Gender
+    const g = String(m.gender).toUpperCase();
+    if (g === 'MALE') {
+      genderStats.male++;
+    } else if (g === 'FEMALE') {
+      genderStats.female++;
+    } else {
+      genderStats.other++;
+    }
+
+    // Age
+    if (m.dob && m.dob !== 'N/A') {
+      const birthDate = new Date(m.dob);
+      if (!isNaN(birthDate.getTime())) {
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const mMonth = today.getMonth() - birthDate.getMonth();
+        if (mMonth < 0 || (mMonth === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        
+        if (age < 18) {
+          ageStats.under18++;
+        } else if (age <= 25) {
+          ageStats.range18_25++;
+        } else if (age <= 35) {
+          ageStats.range26_35++;
+        } else if (age <= 50) {
+          ageStats.range36_50++;
+        } else {
+          ageStats.above50++;
+        }
+      }
+    } else {
+      // Default to 26-35 if DOB is missing/invalid (conservative default)
+      ageStats.range26_35++;
+    }
+  });
+
+  // 4. Hourly traffic Slots
   const slots = ["08:00", "12:00", "16:00", "18:00", "20:00", "22:00"];
   const slotCounts = Array(slots.length).fill(0);
   recentMembers.forEach(m => {
@@ -94,7 +142,7 @@ export default function DashboardOverview({
   });
   const maxSlotCount = Math.max(...slotCounts, 1);
 
-  // 4. Live activity feed - Get last 4 completed payments
+  // 5. Live activity feed - Get last 4 completed payments
   const recentPaidTransactions = [...payments]
     .filter(p => p.status === 'PAID')
     .sort((a, b) => new Date(b.paymentDate || b.createAt) - new Date(a.paymentDate || a.createAt))
@@ -183,7 +231,7 @@ export default function DashboardOverview({
       />
 
       {/* Graphical Breakdown Row */}
-      <div className="purity-grid-2-3" style={{ gridTemplateColumns: '1fr 2fr' }}>
+      <div className="purity-grid-2-3" style={{ gridTemplateColumns: '1fr 1fr 1.2fr', gap: '24px' }}>
         <PaymentDistribution
           khqrSum={khqrSum}
           cashSum={cashSum}
@@ -191,6 +239,11 @@ export default function DashboardOverview({
           khqrPct={khqrPct}
           cashPct={cashPct}
           cardPct={cardPct}
+        />
+        <MemberDemographics
+          genderStats={genderStats}
+          ageStats={ageStats}
+          totalCount={totalActiveCount}
         />
         <PeakTraffic
           slots={slots}

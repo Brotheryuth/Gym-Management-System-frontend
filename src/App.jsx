@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import useGymApi from './hooks/useGymApi';
 import LoginForm from './components/features/LoginForm';
 import PaymentModal from './components/features/PaymentModal';
+import ReceiptCard from './components/features/ReceiptCard';
+import Modal from './components/ui/Modal';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import DashboardOverview from './components/features/DashboardOverview';
@@ -412,6 +414,20 @@ export default function App() {
             isLoading={isLoading}
             error={paymentError}
           />
+      )}
+
+      {activeReceipt && (
+        <Modal
+          isOpen={!!activeReceipt}
+          title="Payment Receipt"
+          onClose={handleResetFlow}
+        >
+          <ReceiptCard
+            receiptData={activeReceipt}
+            planDetails={plans.find(p => String(p.planID) === String(activeReceipt.planID))}
+            onReset={handleResetFlow}
+          />
+        </Modal>
       )}
 
       <AdminWarningModal

@@ -161,8 +161,8 @@ export default function MembershipManagement({
                   </td>
                 </tr>
               ) : (
-                filtered.map((m) => (
-                  <tr key={m.id || m.memberID}>
+                filtered.map((m, idx) => (
+                  <tr key={m.id ? `ms-${m.id}-${idx}` : `mem-${m.memberID}-${idx}`}>
                     <td style={{ fontWeight: 'bold' }}>{m.fullName}</td>
                     <td>
                       <span style={{

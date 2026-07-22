@@ -36,10 +36,6 @@ export default function LoginForm({ onLogin, onBypass, isLoading, error }) {
             <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Cashier Terminal Portal</p>
           </div>
 
-          <div className="login-tip-banner">
-            Terminal Access Info - Username: <strong>admin</strong> | Password: <strong>admin123</strong>
-          </div>
-
           {(error || validationError) && (
             <div style={{
               backgroundColor: 'var(--color-error-bg)',

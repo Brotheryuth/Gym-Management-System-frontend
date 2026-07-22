@@ -173,8 +173,8 @@ export default function MemberManagement({
                   </td>
                 </tr>
               ) : (
-                filteredMembers.map((m) => (
-                  <tr key={m.memberID}>
+                filteredMembers.map((m, idx) => (
+                  <tr key={m.memberID ? `m-${m.memberID}-${idx}` : `m-idx-${idx}`}>
                     <td style={{ fontWeight: 'bold' }}>{m.memberID || 'N/A'}</td>
                     <td>
                       <span className="member-name-cell">{m.fullName}</span>
