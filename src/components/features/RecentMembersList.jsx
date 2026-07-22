@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '../ui/Card';
 import Skeleton from '../ui/Skeleton';
+import Pagination from '../ui/Pagination';
 
 export default function RecentMembersList({ members = [], isLoading, onViewProfile }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
+  const paginatedMembers = members.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <Card style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
       <h3 className="form-section-title" style={{ borderLeftColor: 'var(--text-primary)' }}>
@@ -30,64 +35,74 @@ export default function RecentMembersList({ members = [], isLoading, onViewProfi
           No active shift registrations yet.
         </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {members.map((member, idx) => {
-            const isActive = (member.status || 'ACTIVE').toUpperCase() === 'ACTIVE';
-            return (
-              <div
-                key={member.id ? `rm-${member.id}-${idx}` : `rm-idx-${idx}`}
-                className="recent-member-item"
-                onClick={() => onViewProfile && onViewProfile(member)}
-                style={{ cursor: 'pointer' }}
-                title="Click to view full member profile"
-              >
-                <div>
-                  <h4 style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-                    {member.fullName}
-                  </h4>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                      {member.phoneNumber} • {member.gender}
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {paginatedMembers.map((member, idx) => {
+              const isActive = (member.status || 'ACTIVE').toUpperCase() === 'ACTIVE';
+              return (
+                <div
+                  key={member.id ? `rm-${member.id}-${idx}` : `rm-idx-${idx}`}
+                  className="recent-member-item"
+                  onClick={() => onViewProfile && onViewProfile(member)}
+                  style={{ cursor: 'pointer' }}
+                  title="Click to view full member profile"
+                >
+                  <div>
+                    <h4 style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                      {member.fullName}
+                    </h4>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                      </svg>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                        {member.phoneNumber} • {member.gender}
+                      </span>
+                    </div>
+
+                    <span style={{
+                      display: 'inline-block',
+                      fontSize: '11px',
+                      backgroundColor: 'var(--bg-canvas)',
+                      color: 'var(--text-muted)',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--radius-sm)',
+                      marginTop: '6px',
+                      fontWeight: 600,
+                      border: '1px solid var(--color-border)'
+                    }}>
+                      {member.planName}
                     </span>
                   </div>
-
+                  
                   <span style={{
-                    display: 'inline-block',
                     fontSize: '11px',
-                    backgroundColor: 'var(--bg-canvas)',
-                    color: 'var(--text-muted)',
-                    padding: '2px 8px',
-                    borderRadius: 'var(--radius-sm)',
-                    marginTop: '6px',
-                    fontWeight: 600,
-                    border: '1px solid var(--color-border)'
+                    fontWeight: 700,
+                    padding: '4px 10px',
+                    borderRadius: 'var(--radius-round)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    backgroundColor: isActive ? 'var(--color-success-bg)' : 'var(--color-pending-bg)',
+                    color: isActive ? 'var(--color-success)' : 'var(--color-pending)',
+                    border: `1px solid ${isActive ? 'rgba(22, 163, 74, 0.25)' : 'rgba(217, 119, 6, 0.25)'}`,
+                    whiteSpace: 'nowrap'
                   }}>
-                    {member.planName}
+                    {member.status || 'ACTIVE'}
                   </span>
                 </div>
-                
-                <span style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  padding: '4px 10px',
-                  borderRadius: 'var(--radius-round)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  backgroundColor: isActive ? 'var(--color-success-bg)' : 'var(--color-pending-bg)',
-                  color: isActive ? 'var(--color-success)' : 'var(--color-pending)',
-                  border: `1px solid ${isActive ? 'rgba(22, 163, 74, 0.25)' : 'rgba(217, 119, 6, 0.25)'}`,
-                  whiteSpace: 'nowrap'
-                }}>
-                  {member.status || 'ACTIVE'}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+
+          <Pagination
+            currentPage={currentPage}
+            totalItems={members.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            itemLabel="registrations"
+          />
+        </>
       )}
     </Card>
   );

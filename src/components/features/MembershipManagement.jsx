@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Card from '../ui/Card';
 import InputField from '../ui/InputField';
 import Button from '../ui/Button';
+import Pagination from '../ui/Pagination';
 import MembershipFormModal from './MembershipFormModal';
 
 export default function MembershipManagement({
@@ -19,6 +20,7 @@ export default function MembershipManagement({
   const [genderFilter, setGenderFilter] = useState('ALL');
   const [planFilter, setPlanFilter] = useState('ALL');
   const [sortBy, setSortBy] = useState('DEFAULT');
+  const [currentPage, setCurrentPage] = useState(1);
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,6 +52,9 @@ export default function MembershipManagement({
       if (sortBy === 'STATUS') return (a.status || '').localeCompare(b.status || '');
       return 0;
     });
+
+  const pageSize = 20;
+  const paginatedSubscriptions = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleCancel = (membershipID) => {
     if (cashier?.role !== 'ADMIN') {
@@ -143,7 +148,7 @@ export default function MembershipManagement({
               <InputField
                 placeholder="Search member or plan..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                 className="mb-0"
                 style={{ margin: 0 }}
               />
@@ -152,7 +157,7 @@ export default function MembershipManagement({
             {/* Gender Filter */}
             <select
               value={genderFilter}
-              onChange={(e) => setGenderFilter(e.target.value)}
+              onChange={(e) => { setGenderFilter(e.target.value); setCurrentPage(1); }}
               style={{
                 padding: '8px 12px',
                 borderRadius: 'var(--radius-sm)',
@@ -174,7 +179,7 @@ export default function MembershipManagement({
             {/* Plan Filter */}
             <select
               value={planFilter}
-              onChange={(e) => setPlanFilter(e.target.value)}
+              onChange={(e) => { setPlanFilter(e.target.value); setCurrentPage(1); }}
               style={{
                 padding: '8px 12px',
                 borderRadius: 'var(--radius-sm)',
@@ -196,7 +201,7 @@ export default function MembershipManagement({
             {/* Sort Dropdown */}
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
               style={{
                 padding: '8px 12px',
                 borderRadius: 'var(--radius-sm)',
@@ -239,14 +244,14 @@ export default function MembershipManagement({
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {paginatedSubscriptions.length === 0 ? (
                 <tr>
                   <td colSpan="6" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No membership records found.
                   </td>
                 </tr>
               ) : (
-                filtered.map((m, idx) => (
+                paginatedSubscriptions.map((m, idx) => (
                   <tr key={m.id ? `ms-${m.id}-${idx}` : `mem-${m.memberID}-${idx}`}>
                     <td>
                       <span 
@@ -305,15 +310,15 @@ export default function MembershipManagement({
                           <Button
                             variant="secondary"
                             onClick={() => onPayPending(m)}
-                            style={{ minHeight: '32px', padding: '4px 10px', fontSize: '12px', width: 'auto' }}
+                            style={{ minHeight: '32px', padding: '4px 10px', fontSize: '12px', width: 'auto', color: '#e6a100' }}
                           >
                             Pay Pending
                           </Button>
                         )}
-                        {m.status === 'ACTIVE' && (
+                        {m.status !== 'CANCELLED' && (
                           <Button
                             variant="ghost"
-                            onClick={() => handleCancel(m.id || m.memberID)}
+                            onClick={() => handleCancel(m.id)}
                             style={{
                               minHeight: '32px',
                               padding: '4px 10px',
@@ -334,6 +339,14 @@ export default function MembershipManagement({
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filtered.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          itemLabel="memberships"
+        />
       </Card>
 
       {/* Subscription Overlay Popup Modal */}

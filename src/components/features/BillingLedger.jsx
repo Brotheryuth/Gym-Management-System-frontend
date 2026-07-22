@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Card from '../ui/Card';
 import InputField from '../ui/InputField';
 import Button from '../ui/Button';
+import Pagination from '../ui/Pagination';
 
 export default function BillingLedger({
   payments = [],
@@ -11,6 +12,7 @@ export default function BillingLedger({
   onShowAdminWarning
 }) {
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -40,6 +42,9 @@ export default function BillingLedger({
       (p.status && p.status.toLowerCase().includes(term))
     );
   });
+
+  const pageSize = 20;
+  const paginatedPayments = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleRefund = (paymentID) => {
     if (cashier?.role !== 'ADMIN') {
@@ -87,7 +92,7 @@ export default function BillingLedger({
           </div>
           <div className="purity-metric-icon blue">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
           </div>
@@ -140,7 +145,7 @@ export default function BillingLedger({
             <InputField
               placeholder="Search by ID, member, method..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               style={{ margin: 0 }}
             />
           </div>
@@ -162,14 +167,14 @@ export default function BillingLedger({
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {paginatedPayments.length === 0 ? (
                 <tr>
                   <td colSpan="9" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No payment transactions found.
                   </td>
                 </tr>
               ) : (
-                filtered.map((p, idx) => {
+                paginatedPayments.map((p, idx) => {
                   const dateVal = p.paymentDate || p.createAt;
                   const formattedDate = dateVal 
                     ? new Date(dateVal).toLocaleString()
@@ -243,6 +248,14 @@ export default function BillingLedger({
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filtered.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          itemLabel="payments"
+        />
       </Card>
     </div>
   );

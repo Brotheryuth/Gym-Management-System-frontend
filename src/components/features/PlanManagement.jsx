@@ -3,6 +3,7 @@ import Card from '../ui/Card';
 import InputField from '../ui/InputField';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
+import Pagination from '../ui/Pagination';
 
 export default function PlanManagement({
   plans = [],
@@ -15,6 +16,7 @@ export default function PlanManagement({
 }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   
   // Form fields
   const [planName, setPlanName] = useState('');
@@ -188,43 +190,59 @@ export default function PlanManagement({
       </div>
 
       {/* 3. Plans Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
-        {plans.length === 0 ? (
-          <Card style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-            No plans available.
-          </Card>
-        ) : (
-          plans.map(p => (
-            <Card key={p.planID} hoverLift style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '220px' }}>
-              <div>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Plan ID: #{p.planID}</span>
-                <h4 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 12px' }}>{p.planName}</h4>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--accent-blue)' }}>${Number(p.planPrice).toFixed(2)}</span>
-                  <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>/ {p.duration} {p.duration === 1 ? 'Month' : 'Months'}</span>
-                </div>
-              </div>
-              
-              <div style={{ display: 'flex', gap: '10px', borderTop: '1px solid var(--color-border)', paddingTop: '12px', marginTop: '12px' }}>
-                <Button
-                  variant="secondary"
-                  onClick={() => handleOpenForm(p)}
-                  style={{ minHeight: '32px', padding: '4px 10px', fontSize: '12px', flex: 1 }}
-                >
-                  Edit Plan
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleDelete(p.planID)}
-                  style={{ minHeight: '32px', padding: '4px 10px', fontSize: '12px', flex: 1, color: 'var(--color-error)' }}
-                >
-                  Delete
-                </Button>
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
+      {(() => {
+        const pageSize = 20;
+        const paginatedPlans = plans.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+        return (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
+              {paginatedPlans.length === 0 ? (
+                <Card style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                  No plans available.
+                </Card>
+              ) : (
+                paginatedPlans.map(p => (
+                  <Card key={p.planID} hoverLift style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '220px' }}>
+                    <div>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Plan ID: #{p.planID}</span>
+                      <h4 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 12px' }}>{p.planName}</h4>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '28px', fontWeight: 800, color: 'var(--accent-blue)' }}>${Number(p.planPrice).toFixed(2)}</span>
+                        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>/ {p.duration} {p.duration === 1 ? 'Month' : 'Months'}</span>
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '10px', borderTop: '1px solid var(--color-border)', paddingTop: '12px', marginTop: '12px' }}>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleOpenForm(p)}
+                        style={{ minHeight: '32px', padding: '4px 10px', fontSize: '12px', flex: 1 }}
+                      >
+                        Edit Plan
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleDelete(p.planID)}
+                        style={{ minHeight: '32px', padding: '4px 10px', fontSize: '12px', flex: 1, color: 'var(--color-error)' }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalItems={plans.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              itemLabel="plans"
+            />
+          </>
+        );
+      })()}
 
       {/* 4. Edit/Add Plan Dialog Modal */}
       <Modal

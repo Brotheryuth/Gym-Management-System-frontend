@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Card from '../ui/Card';
 import InputField from '../ui/InputField';
 import Button from '../ui/Button';
+import Pagination from '../ui/Pagination';
 import MemberFormModal from './MemberFormModal';
 
 export default function MemberManagement({
@@ -19,6 +20,7 @@ export default function MemberManagement({
   const [genderFilter, setGenderFilter] = useState('ALL');
   const [planFilter, setPlanFilter] = useState('ALL');
   const [sortBy, setSortBy] = useState('DEFAULT');
+  const [currentPage, setCurrentPage] = useState(1);
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,6 +67,9 @@ export default function MemberManagement({
       if (sortBy === 'PLAN') return (a.planName || '').localeCompare(b.planName || '');
       return 0;
     });
+
+  const pageSize = 20;
+  const paginatedMembers = filteredMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleRegisterClick = () => {
     setSelectedMember(null);
@@ -169,7 +174,7 @@ export default function MemberManagement({
               <InputField
                 placeholder="Search name, ID, phone..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                 className="mb-0"
                 style={{ margin: 0 }}
               />
@@ -178,7 +183,7 @@ export default function MemberManagement({
             {/* Gender Filter */}
             <select
               value={genderFilter}
-              onChange={(e) => setGenderFilter(e.target.value)}
+              onChange={(e) => { setGenderFilter(e.target.value); setCurrentPage(1); }}
               style={{
                 padding: '8px 12px',
                 borderRadius: 'var(--radius-sm)',
@@ -200,7 +205,7 @@ export default function MemberManagement({
             {/* Plan Filter */}
             <select
               value={planFilter}
-              onChange={(e) => setPlanFilter(e.target.value)}
+              onChange={(e) => { setPlanFilter(e.target.value); setCurrentPage(1); }}
               style={{
                 padding: '8px 12px',
                 borderRadius: 'var(--radius-sm)',
@@ -223,7 +228,7 @@ export default function MemberManagement({
             {/* Sort Dropdown */}
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
               style={{
                 padding: '8px 12px',
                 borderRadius: 'var(--radius-sm)',
@@ -268,14 +273,14 @@ export default function MemberManagement({
               </tr>
             </thead>
             <tbody>
-              {filteredMembers.length === 0 ? (
+              {paginatedMembers.length === 0 ? (
                 <tr>
                   <td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No member profiles found.
                   </td>
                 </tr>
               ) : (
-                filteredMembers.map((m, idx) => (
+                paginatedMembers.map((m, idx) => (
                   <tr key={m.memberID ? `m-${m.memberID}-${idx}` : `m-idx-${idx}`}>
                     <td style={{ fontWeight: 'bold' }}>{m.memberID || 'N/A'}</td>
                     <td>
@@ -354,6 +359,14 @@ export default function MemberManagement({
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredMembers.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          itemLabel="members"
+        />
       </Card>
 
       {/* Member Creation & Edit Popup Overlay Modal */}

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
+import Pagination from '../ui/Pagination';
 
 export default function MemberProfileModal({
   isOpen,
@@ -10,6 +11,7 @@ export default function MemberProfileModal({
   payments = [],
   onSubscribeMember
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
   if (!isOpen || !member) return null;
 
   // Find membership record for this member
@@ -23,6 +25,9 @@ export default function MemberProfileModal({
     p => String(p.membershipID) === String(membership?.id) ||
          String(p.memberID) === String(member.memberID || member.id)
   );
+
+  const pageSize = 20;
+  const paginatedPayments = memberPayments.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const hasActivePlan = membership && membership.status === 'ACTIVE';
 
@@ -175,10 +180,9 @@ export default function MemberProfileModal({
               Billing Transactions ({memberPayments.length})
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '140px', overflowY: 'auto' }}>
-              {memberPayments.map(p => (
+              {paginatedPayments.map(p => (
                 <div key={p.id} style={{
                   display: 'flex',
-                  justify幻想: 'space-between',
                   justifyContent: 'space-between',
                   padding: '8px 12px',
                   borderRadius: 'var(--radius-sm)',
@@ -193,6 +197,14 @@ export default function MemberProfileModal({
                 </div>
               ))}
             </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalItems={memberPayments.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              itemLabel="transactions"
+            />
           </div>
         )}
 
