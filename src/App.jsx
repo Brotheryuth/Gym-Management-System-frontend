@@ -37,6 +37,8 @@ export default function App() {
     payments,
     cashier,
     isOffline,
+    backendStatus,
+    retryBackendConnection,
     isLoading,
     error: apiError,
     login,
@@ -301,6 +303,8 @@ export default function App() {
         onBypass={bypassLogin}
         isLoading={isLoading}
         error={apiError}
+        backendStatus={backendStatus}
+        onRetryBackend={retryBackendConnection}
       />
     );
   }

@@ -1,0 +1,208 @@
+/* Mascot Wrapper Positioning */
+.mascot-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  top: -195px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: top 0.4s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Explicit status positioning: Sits cleanly at the top border above G logo */
+.mascot-container.mascot-status-offline,
+.mascot-container.mascot-status-connecting,
+.mascot-container.mascot-status-connected {
+  top: -195px;
+}
+
+/* Signboard bubble stays visible above card at all times */
+.mascot-signboard {
+  background-color: #ffffff;
+  border: 2px solid #1e1e1e;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  max-width: 280px;
+  text-align: center;
+  position: relative;
+  z-index: 15; /* Sits above login card */
+  animation: floatBob 3.5s ease-in-out infinite alternate;
+  animation-delay: -0.5s;
+  transition: all 0.3s ease;
+}
+
+/* Little tail pointing down to mascot */
+.mascot-signboard::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background-color: #ffffff;
+  border-right: 2px solid #1e1e1e;
+  border-bottom: 2px solid #1e1e1e;
+}
+
+.mascot-sign-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.mascot-status-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted, #64748b);
+}
+
+.mascot-sign-text {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.35;
+  margin: 0;
+}
+
+/* Mascot SVG Character body - Sits behind login card (z-index 5) */
+.mascot-character-svg {
+  width: 115px;
+  height: 80px;
+  overflow: visible;
+  position: relative;
+  z-index: 5; /* Sits BEHIND login card (z-index 10) */
+  margin-top: -6px;
+  opacity: 1;
+  /* Smooth 4-second fade-in transition when un-hovering */
+  transition: opacity 4s ease-in-out;
+  animation: floatBob 3.5s ease-in-out infinite alternate;
+}
+
+/* Hover State: ONLY THE MASCOT CHARACTER stays in place and fades away over 4 seconds! */
+.mascot-container:hover .mascot-character-svg,
+.mascot-container.is-hovered .mascot-character-svg {
+  opacity: 0 !important;
+  /* Smooth 4-second fade-out transition */
+  transition: opacity 4s ease-in-out !important;
+}
+
+/* Waving Sign Animations on Hover */
+.mascot-container:hover .mascot-signboard {
+  animation: waveSign 0.6s ease-in-out infinite alternate !important;
+}
+
+@keyframes waveSign {
+  0% {
+    transform: rotate(-3.5deg) translateY(-2px);
+  }
+  100% {
+    transform: rotate(3.5deg) translateY(-5px);
+  }
+}
+
+/* Continuous Floating Bobbing */
+@keyframes floatBob {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Status Indicator Dots */
+.mascot-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-badge-yellow {
+  background-color: #f59e0b;
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  animation: pulseDotYellow 1.6s infinite;
+}
+
+.status-badge-green {
+  background-color: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.status-badge-red {
+  background-color: #ef4444;
+  animation: pulseDotRed 1.6s infinite;
+}
+
+@keyframes pulseDotYellow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes pulseDotRed {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* Manual Check Button on Sign */
+.mascot-retry-btn {
+  margin-top: 6px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mascot-retry-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+.mascot-retry-btn:active {
+  transform: translateY(0);
+}
+
+/* Eye Blink animation for waking state */
+@keyframes blinkEye {
+  0%, 90%, 100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+.mascot-eyes-blink {
+  transform-origin: center;
+  animation: blinkEye 4s infinite;
+}

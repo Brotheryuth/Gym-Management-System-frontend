@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import Card from '../ui/Card';
 import InputField from '../ui/InputField';
 import Button from '../ui/Button';
+import BackendStatusMascot from '../ui/BackendStatusMascot';
 
-export default function LoginForm({ onLogin, onBypass, isLoading, error }) {
+export default function LoginForm({ onLogin, onBypass, isLoading, error, backendStatus, onRetryBackend }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [validationError, setValidationError] = useState('');
@@ -26,7 +27,9 @@ export default function LoginForm({ onLogin, onBypass, isLoading, error }) {
 
   return (
     <div className="login-container">
-      <Card className="login-card">
+      <div className="login-wrapper">
+        <BackendStatusMascot status={backendStatus} onRetry={onRetryBackend} />
+        <Card className="login-card">
         <form onSubmit={handleSubmit}>
           <div className="login-branding">
             <div className="login-logo">G</div>
@@ -102,5 +105,6 @@ export default function LoginForm({ onLogin, onBypass, isLoading, error }) {
         </form>
       </Card>
     </div>
-  );
+  </div>
+);
 }

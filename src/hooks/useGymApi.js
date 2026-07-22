@@ -12,6 +12,7 @@ export default function useGymApi() {
   const [payments, setPayments] = useState([]);
   const [cashier, setCashier] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
+  const [backendStatus, setBackendStatus] = useState('connecting');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -113,37 +114,57 @@ export default function useGymApi() {
     }
   }, [mapMemberships]);
 
-  // Auto-detect backend on mount
-  useEffect(() => {
-    async function checkBackend() {
-      setIsLoading(true);
-      try {
-        const res = await fetch('/api/plans', { signal: AbortSignal.timeout(2000) });
-        if (res.ok) {
-          const data = await res.json();
-          setPlans(data);
-          setIsOffline(false);
-          await refreshDatabase();
-        } else {
-          setIsOffline(true);
-          setPlans([]);
-          setRecentMembers([]);
-          setMembers([]);
-          setPayments([]);
-        }
-      } catch (err) {
-        console.warn('Backend offline.', err);
+  // Check backend health & auto-retry while waking up
+  const checkBackend = useCallback(async () => {
+    try {
+      const res = await fetch('/api/plans', { signal: AbortSignal.timeout(4000) });
+      if (res.ok) {
+        const data = await res.json();
+        setPlans(data);
+        setIsOffline(false);
+        setBackendStatus('connected');
+        await refreshDatabase();
+        return true;
+      } else {
         setIsOffline(true);
-        setPlans([]);
-        setRecentMembers([]);
-        setMembers([]);
-        setPayments([]);
-      } finally {
-        setIsLoading(false);
+        setBackendStatus('connecting');
+        return false;
+      }
+    } catch (err) {
+      console.warn('Backend offline or waking up...', err);
+      setIsOffline(true);
+      setBackendStatus(prev => prev === 'connected' ? 'offline' : 'connecting');
+      return false;
+    }
+  }, [refreshDatabase]);
+
+  // Polling effect: pings Render every 3.5s until it responds
+  useEffect(() => {
+    let isMounted = true;
+    let timerId = null;
+
+    async function initCheck() {
+      setIsLoading(true);
+      const ok = await checkBackend();
+      if (isMounted) setIsLoading(false);
+
+      if (!ok && isMounted) {
+        timerId = setInterval(async () => {
+          const connected = await checkBackend();
+          if (connected && timerId) {
+            clearInterval(timerId);
+          }
+        }, 3500);
       }
     }
-    checkBackend();
-  }, [refreshDatabase]);
+
+    initCheck();
+
+    return () => {
+      isMounted = false;
+      if (timerId) clearInterval(timerId);
+    };
+  }, [checkBackend]);
 
   const login = useCallback(async (username, password) => {
     setIsLoading(true);
@@ -354,6 +375,8 @@ export default function useGymApi() {
     payments,
     cashier,
     isOffline,
+    backendStatus,
+    retryBackendConnection: checkBackend,
     isLoading,
     error,
     login,
