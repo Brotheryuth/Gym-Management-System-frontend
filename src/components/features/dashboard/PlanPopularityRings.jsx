@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function PlanPopularityRings({ recentMembers = [], plans = [] }) {
+  const [isCardHovered, setIsCardHovered] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+
   const totalCount = recentMembers.length || 1;
 
   // Aggregate member counts per plan name or map to top 3 plan categories
@@ -10,7 +13,6 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
     planMap[pName] = (planMap[pName] || 0) + 1;
   });
 
-  // If plans list is available, ensure top plans are represented
   const planEntries = Object.entries(planMap).sort((a, b) => b[1] - a[1]);
   
   // Default fallbacks if no registrations exist yet
@@ -19,19 +21,25 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
       name: planEntries[0]?.[0] || 'Standard Monthly',
       count: planEntries[0]?.[1] || (recentMembers.length ? 1 : 0),
       color: '#f47609', // Amber / Orange (Outer Ring)
-      trackColor: 'rgba(244, 118, 9, 0.15)'
+      trackColor: 'rgba(244, 118, 9, 0.15)',
+      r: 54,
+      circumference: 2 * Math.PI * 54
     },
     {
       name: planEntries[1]?.[0] || 'VIP Annual',
       count: planEntries[1]?.[1] || 0,
       color: '#10b981', // Emerald Green (Middle Ring)
-      trackColor: 'rgba(16, 185, 129, 0.15)'
+      trackColor: 'rgba(16, 185, 129, 0.15)',
+      r: 40,
+      circumference: 2 * Math.PI * 40
     },
     {
       name: planEntries[2]?.[0] || 'Student / Day Pass',
       count: planEntries[2]?.[1] || 0,
-      color: '#6366f1', // Indigo / Cyan (Inner Ring)
-      trackColor: 'rgba(99, 102, 241, 0.15)'
+      color: '#6366f1', // Indigo / Purple (Inner Ring)
+      trackColor: 'rgba(99, 102, 241, 0.15)',
+      r: 26,
+      circumference: 2 * Math.PI * 26
     }
   ];
 
@@ -41,24 +49,26 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
     pct: totalCount > 0 ? Math.min(100, Math.round((p.count / totalCount) * 100)) : 0
   }));
 
-  // SVG Concentric Ring Dimensions
   const center = 70;
-  const outerR = 54;
-  const midR = 40;
-  const innerR = 26;
-  const strokeWidth = 8.5;
-
-  const outerCircumference = 2 * Math.PI * outerR;
-  const midCircumference = 2 * Math.PI * midR;
-  const innerCircumference = 2 * Math.PI * innerR;
+  const baseStrokeWidth = 8.5;
 
   const getOffset = (circumference, pct) => {
-    const safePct = Math.max(2, Math.min(100, pct)); // min 2% so ring tip is visible if > 0
+    const safePct = Math.max(3, Math.min(100, pct)); // min 3% so ring tip is visible if > 0
     return circumference - (circumference * safePct) / 100;
   };
 
+  const hoveredItem = hoveredIndex !== null ? items[hoveredIndex] : null;
+
   return (
-    <div className="purity-card plan-rings-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px 20px' }}>
+    <div
+      className="purity-card plan-rings-card"
+      onMouseEnter={() => setIsCardHovered(true)}
+      onMouseLeave={() => {
+        setIsCardHovered(false);
+        setHoveredIndex(null);
+      }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px 20px', position: 'relative' }}
+    >
       {/* Header */}
       <div>
         <h4 style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', gap: '8px', alignItems: 'center', margin: 0 }}>
@@ -70,7 +80,7 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
           Plan Popularity
         </h4>
         <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px', margin: 0 }}>
-          Active subscription tier distribution.
+          Active subscription tier breakdown.
         </p>
       </div>
 
@@ -80,58 +90,57 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
         <div style={{ position: 'relative', width: '140px', height: '140px', flexShrink: 0 }}>
           <svg width="140" height="140" viewBox="0 0 140 140" style={{ transform: 'rotate(-90deg)', overflow: 'visible' }}>
             {/* Background Tracks */}
-            <circle cx={center} cy={center} r={outerR} fill="none" stroke={items[0].trackColor} strokeWidth={strokeWidth} />
-            <circle cx={center} cy={center} r={midR} fill="none" stroke={items[1].trackColor} strokeWidth={strokeWidth} />
-            <circle cx={center} cy={center} r={innerR} fill="none" stroke={items[2].trackColor} strokeWidth={strokeWidth} />
+            {items.map((item, idx) => (
+              <circle
+                key={`track-${idx}`}
+                cx={center}
+                cy={center}
+                r={item.r}
+                fill="none"
+                stroke={item.trackColor}
+                strokeWidth={hoveredIndex === idx ? 12 : baseStrokeWidth}
+                style={{ transition: 'all 0.3s ease' }}
+              />
+            ))}
 
-            {/* Animated Concentric Rings */}
-            {/* Outer Ring */}
-            <circle
-              className="ring-bar ring-outer"
-              cx={center}
-              cy={center}
-              r={outerR}
-              fill="none"
-              stroke={items[0].color}
-              strokeWidth={strokeWidth}
-              strokeDasharray={outerCircumference}
-              strokeDashoffset={getOffset(outerCircumference, items[0].pct)}
-              strokeLinecap="round"
-              style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.34, 1.25, 0.64, 1)' }}
-            />
+            {/* Concentric Progress Rings */}
+            {items.map((item, idx) => {
+              const isHovered = hoveredIndex === idx;
+              const isDimmed = hoveredIndex !== null && !isHovered;
+              const targetOffset = getOffset(item.circumference, item.pct);
+              
+              // Run/draw from zero (circumference) to target number (targetOffset) when card or ring is hovered
+              const currentOffset = isCardHovered || isHovered ? targetOffset : item.circumference;
 
-            {/* Middle Ring */}
-            <circle
-              className="ring-bar ring-mid"
-              cx={center}
-              cy={center}
-              r={midR}
-              fill="none"
-              stroke={items[1].color}
-              strokeWidth={strokeWidth}
-              strokeDasharray={midCircumference}
-              strokeDashoffset={getOffset(midCircumference, items[1].pct)}
-              strokeLinecap="round"
-              style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.34, 1.25, 0.64, 1)' }}
-            />
-
-            {/* Inner Ring */}
-            <circle
-              className="ring-bar ring-inner"
-              cx={center}
-              cy={center}
-              r={innerR}
-              fill="none"
-              stroke={items[2].color}
-              strokeWidth={strokeWidth}
-              strokeDasharray={innerCircumference}
-              strokeDashoffset={getOffset(innerCircumference, items[2].pct)}
-              strokeLinecap="round"
-              style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.34, 1.25, 0.64, 1)' }}
-            />
+              return (
+                <circle
+                  key={`ring-${idx}`}
+                  cx={center}
+                  cy={center}
+                  r={item.r}
+                  fill="none"
+                  stroke={item.color}
+                  strokeWidth={isHovered ? 12 : baseStrokeWidth}
+                  strokeDasharray={item.circumference}
+                  strokeDashoffset={currentOffset}
+                  strokeLinecap="round"
+                  onMouseEnter={() => setHoveredIndex(idx)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  style={{
+                    cursor: 'pointer',
+                    pointerEvents: 'stroke',
+                    opacity: isDimmed ? 0.22 : 1,
+                    filter: isHovered
+                      ? `drop-shadow(0 0 8px ${item.color}) brightness(1.2)`
+                      : (isCardHovered ? `drop-shadow(0 0 3px ${item.color})` : 'none'),
+                    transition: `stroke-dashoffset 0.85s cubic-bezier(0.34, 1.25, 0.64, 1) ${idx * 110}ms, stroke-width 0.3s ease, opacity 0.3s ease, filter 0.3s ease`
+                  }}
+                />
+              );
+            })}
           </svg>
 
-          {/* Center Summary Label */}
+          {/* Center Label (Fixed Total Active Count) */}
           <div style={{
             position: 'absolute',
             top: 0,
@@ -142,12 +151,14 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            textAlign: 'center',
+            padding: '4px'
           }}>
-            <span style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-heading)', lineHeight: 1 }}>
+            <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-heading)', lineHeight: 1 }}>
               {recentMembers.length}
             </span>
-            <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: '2px' }}>
+            <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: '3px' }}>
               Active
             </span>
           </div>
@@ -155,31 +166,57 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
 
         {/* Legend List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: 0 }}>
-          {items.map((item, idx) => (
-            <div key={idx} className="ring-legend-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', fontSize: '11.5px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>
-                <span style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: item.color,
-                  flexShrink: 0
-                }} />
-                <span style={{
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }} title={item.name}>
-                  {item.name}
+          {items.map((item, idx) => {
+            const isHovered = hoveredIndex === idx;
+            const isDimmed = hoveredIndex !== null && !isHovered;
+
+            return (
+              <div
+                key={idx}
+                className="ring-legend-row"
+                onMouseEnter={() => setHoveredIndex(idx)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '6px',
+                  fontSize: '11.5px',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  backgroundColor: isHovered ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+                  opacity: isDimmed ? 0.35 : 1,
+                  transform: isHovered ? 'translateX(4px)' : 'translateX(0)',
+                  transition: 'all 0.25s cubic-bezier(0.34, 1.25, 0.64, 1)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>
+                  <span style={{
+                    width: isHovered ? '10px' : '8px',
+                    height: isHovered ? '10px' : '8px',
+                    borderRadius: '50%',
+                    backgroundColor: item.color,
+                    boxShadow: isHovered ? `0 0 6px ${item.color}` : 'none',
+                    flexShrink: 0,
+                    transition: 'all 0.2s ease'
+                  }} />
+                  <span style={{
+                    fontWeight: isHovered ? 700 : 600,
+                    color: isHovered ? item.color : 'var(--text-primary)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }} title={item.name}>
+                    {item.name}
+                  </span>
+                </div>
+                <span style={{ fontWeight: 700, color: isHovered ? item.color : 'var(--text-muted)', fontSize: '11px', flexShrink: 0 }}>
+                  {item.count} ({item.pct}%)
                 </span>
               </div>
-              <span style={{ fontWeight: 700, color: 'var(--text-muted)', fontSize: '11px', flexShrink: 0 }}>
-                {item.count} ({item.pct}%)
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
