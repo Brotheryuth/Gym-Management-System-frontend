@@ -169,7 +169,6 @@ export default function useGymApi() {
   }, [checkBackend]);
 
   const login = useCallback(async (username, password) => {
-    setIsLoading(true);
     setError(null);
     try {
       const user = await loginApi(username, password);
@@ -178,8 +177,6 @@ export default function useGymApi() {
     } catch (err) {
       setError(err.message);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 

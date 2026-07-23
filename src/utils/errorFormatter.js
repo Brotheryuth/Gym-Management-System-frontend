@@ -6,6 +6,10 @@ export function formatErrorMessage(error) {
   const raw = typeof error === 'string' ? error : error.message || String(error);
   const msg = raw.toLowerCase().trim();
 
+  if (msg.includes('invalid name') || msg.includes('invalid password') || msg.includes('login failed') || msg.includes('credentials')) {
+    return 'Invalid cashier identifier or security password.';
+  }
+
   if (msg.includes('phone') && (msg.includes('exist') || msg.includes('duplicate') || msg.includes('already'))) {
     return 'This phone number is already registered to an existing member profile.';
   }
