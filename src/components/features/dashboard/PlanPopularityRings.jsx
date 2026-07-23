@@ -89,11 +89,8 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [], on
 
   const hoveredItem = hoveredIndex !== null ? items[hoveredIndex] : null;
 
-  // Smart overlay positioning: when cursor approaches right edge (>150px), flip tooltip to left side of cursor so it floats 100% unclipped and never triggers layout shifts
-  const isNearRightEdge = mousePos.x > 150;
-  const tooltipX = isNearRightEdge
-    ? Math.max(10, mousePos.x - 120)
-    : mousePos.x + 14;
+  // Position floating tooltip strictly on the RIGHT side of the cursor
+  const tooltipX = Math.min(mousePos.x + 14, 260);
   const tooltipY = Math.max(10, mousePos.y - 32);
 
   return (
@@ -172,7 +169,7 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [], on
                     r={item.r}
                     fill="none"
                     stroke={item.color}
-                    strokeWidth={isHovered ? 11 : baseStrokeWidth}
+                    strokeWidth={hoveredIndex === idx ? 11 : baseStrokeWidth}
                     strokeDasharray={item.circumference}
                     strokeDashoffset={currentOffset}
                     strokeLinecap="round"
