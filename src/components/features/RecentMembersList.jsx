@@ -5,12 +5,12 @@ import Pagination from '../ui/Pagination';
 
 export default function RecentMembersList({ members = [], isLoading, onViewProfile }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 20;
+  const pageSize = 6;
   const paginatedMembers = members.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <Card style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
-      <h3 className="form-section-title" style={{ borderLeftColor: 'var(--text-primary)' }}>
+    <Card style={{ height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column', padding: '20px', position: 'relative' }}>
+      <h3 className="form-section-title" style={{ borderLeftColor: 'var(--text-primary)', marginBottom: '16px', flexShrink: 0 }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary)' }}>
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
           <circle cx="9" cy="7" r="4"></circle>
@@ -21,7 +21,7 @@ export default function RecentMembersList({ members = [], isLoading, onViewProfi
       </h3>
 
       {isLoading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
           {[1, 2, 3].map((n) => (
             <div key={n} style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: '12px' }}>
               <Skeleton width="60%" height="16px" style={{ marginBottom: '8px' }} />
@@ -31,12 +31,12 @@ export default function RecentMembersList({ members = [], isLoading, onViewProfi
           ))}
         </div>
       ) : members.length === 0 ? (
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', textAlign: 'center', padding: '20px 0', flex: 1 }}>
           No active shift registrations yet.
         </p>
       ) : (
-        <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
             {paginatedMembers.map((member, idx) => {
               const isActive = (member.status || 'ACTIVE').toUpperCase() === 'ACTIVE';
               return (
@@ -95,14 +95,16 @@ export default function RecentMembersList({ members = [], isLoading, onViewProfi
             })}
           </div>
 
-          <Pagination
-            currentPage={currentPage}
-            totalItems={members.length}
-            pageSize={pageSize}
-            onPageChange={setCurrentPage}
-            itemLabel="registrations"
-          />
-        </>
+          <div style={{ marginTop: 'auto', paddingTop: '12px', flexShrink: 0, background: 'var(--bg-surface)' }}>
+            <Pagination
+              currentPage={currentPage}
+              totalItems={members.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              itemLabel="registrations"
+            />
+          </div>
+        </div>
       )}
     </Card>
   );

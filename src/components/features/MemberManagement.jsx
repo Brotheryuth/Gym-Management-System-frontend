@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { formatErrorMessage } from '../../utils/errorFormatter';
 import Card from '../ui/Card';
@@ -30,6 +30,10 @@ export default function MemberManagement({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, genderFilter, planFilter, sortBy]);
 
   // Cross-reference members with recentMembers to get real planName & status
   const enrichedMembers = members.map(m => {
@@ -81,7 +85,7 @@ export default function MemberManagement({
       return 0;
     });
 
-  const pageSize = 20;
+  const pageSize = 6;
   const paginatedMembers = filteredMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleRegisterClick = () => {

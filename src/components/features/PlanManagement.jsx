@@ -196,7 +196,7 @@ export default function PlanManagement({
 
       {/* 3. Plans Cards Grid */}
       {(() => {
-        const pageSize = 20;
+        const pageSize = 6;
         const paginatedPlans = plans.slice((currentPage - 1) * pageSize, currentPage * pageSize);
         return (
           <>

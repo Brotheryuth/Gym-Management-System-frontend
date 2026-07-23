@@ -42,73 +42,75 @@ export default function RegistrationWorkflow({
   onViewProfile
 }) {
   return (
-    <div className="dashboard-grid">
-      <div className="workspace-left">
-        {/* Back CTA Button */}
-        <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '8px' }}>
-          <Button 
-            variant="secondary"
-            onClick={handleResetFlow}
-            style={{ width: 'auto', minHeight: '38px', padding: '6px 16px', fontSize: '13px', color: 'var(--text-muted)', border: '1.5px solid var(--color-border)', backgroundColor: 'transparent' }}
-          >
-            ← Back to Dashboard
-          </Button>
-        </div>
-
-        {activeReceipt ? (
-          <ReceiptCard
-            receiptData={activeReceipt}
-            planDetails={plans.find(p => String(p.planID) === String(activeReceipt.planID))}
-            onReset={handleResetFlow}
-          />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
-            {/* Step 1 Profile registration */}
-            <MemberForm
-              formData={form}
-              errors={errors}
-              onChange={handleFormChange}
-              onRegister={handleRegisterMember}
-              registeredMember={registeredMember}
-              isLoading={isFormLoading}
-              isEditing={isEditing}
-            />
-
-            {/* Step 2 Billing setup */}
-            <PlanSelection
-              plans={plans}
-              selectedPlanID={form.planID}
-              discount={form.discount}
-              paymentMethod={form.paymentMethod}
-              startDate={form.startDate}
-              errors={errors}
-              onChange={handleFormChange}
-              registeredMember={registeredMember}
-            />
-
-            {/* Step 2 Checkout activation button */}
-            {registeredMember && (
-              <Button
-                type="button"
-                onClick={handleCreateMembership}
-                loading={isLoading}
-                style={{ fontSize: '16px' }}
-              >
-                Create Membership & Process Payment (${finalPrice.toFixed(2)})
-              </Button>
-            )}
-          </div>
-        )}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '0 4px' }}>
+      {/* Top CTA Row */}
+      <div style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: '4px' }}>
+        <Button 
+          variant="secondary"
+          onClick={handleResetFlow}
+          style={{ width: 'auto', minHeight: '38px', padding: '6px 16px', fontSize: '13px', color: 'var(--text-primary)', border: '1.5px solid var(--color-border)', backgroundColor: 'var(--bg-surface)' }}
+        >
+          ← Back to Dashboard
+        </Button>
       </div>
 
-      {/* Sidebar list logs preview */}
-      <div className="workspace-right" style={{ paddingTop: activeReceipt ? '0' : '46px' }}>
-        <RecentMembersList
-          members={recentMembers}
-          isLoading={isLoading && recentMembers.length === 0}
-          onViewProfile={onViewProfile}
-        />
+      {/* Aligned 2-Column Layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2.1fr 1fr', gap: '24px', alignItems: 'start' }}>
+        <div className="workspace-left">
+          {activeReceipt ? (
+            <ReceiptCard
+              receiptData={activeReceipt}
+              planDetails={plans.find(p => String(p.planID) === String(activeReceipt.planID))}
+              onReset={handleResetFlow}
+            />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Step 1 Profile registration */}
+              <MemberForm
+                formData={form}
+                errors={errors}
+                onChange={handleFormChange}
+                onRegister={handleRegisterMember}
+                registeredMember={registeredMember}
+                isLoading={isFormLoading}
+                isEditing={isEditing}
+              />
+
+              {/* Step 2 Billing setup */}
+              <PlanSelection
+                plans={plans}
+                selectedPlanID={form.planID}
+                discount={form.discount}
+                paymentMethod={form.paymentMethod}
+                startDate={form.startDate}
+                errors={errors}
+                onChange={handleFormChange}
+                registeredMember={registeredMember}
+              />
+
+              {/* Step 2 Checkout activation button */}
+              {registeredMember && (
+                <Button
+                  type="button"
+                  onClick={handleCreateMembership}
+                  loading={isLoading}
+                  style={{ fontSize: '16px' }}
+                >
+                  Create Membership & Process Payment (${finalPrice.toFixed(2)})
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar list logs preview - Aligned pixel-perfectly */}
+        <div className="workspace-right">
+          <RecentMembersList
+            members={recentMembers}
+            isLoading={isLoading && recentMembers.length === 0}
+            onViewProfile={onViewProfile}
+          />
+        </div>
       </div>
     </div>
   );

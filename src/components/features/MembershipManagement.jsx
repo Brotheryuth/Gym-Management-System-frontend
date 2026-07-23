@@ -90,7 +90,11 @@ export default function MembershipManagement({
       return 0;
     });
 
-  const pageSize = 20;
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, genderFilter, planFilter, statusFilter, sortBy]);
+
+  const pageSize = 6;
   const paginatedSubscriptions = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleCancel = (membershipID) => {

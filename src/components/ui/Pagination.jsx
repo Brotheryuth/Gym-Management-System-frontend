@@ -16,8 +16,25 @@ export default function Pagination({
   const startItem = (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
-  // Generate page numbers array
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  // Generate smart truncated page numbers with dynamic sliding window
+  const getPageNumbers = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (currentPage <= 2) {
+      return [1, 2, 3, '...', totalPages];
+    }
+
+    if (currentPage >= totalPages - 1) {
+      return [1, '...', totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    // Dynamic sliding window: page 3 -> [2, 3, 4, '...', totalPages], page 4 -> [3, 4, 5, '...', totalPages]
+    return [currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+  };
+
+  const pages = getPageNumbers();
 
   return (
     <div style={{
@@ -49,7 +66,24 @@ export default function Pagination({
           Previous
         </Button>
 
-        {pages.map((p) => {
+        {pages.map((p, idx) => {
+          if (p === '...') {
+            return (
+              <span
+                key={`ellipsis-${idx}`}
+                style={{
+                  padding: '0 4px',
+                  color: 'var(--text-muted)',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  userSelect: 'none'
+                }}
+              >
+                ...
+              </span>
+            );
+          }
+
           const isSelected = p === currentPage;
           return (
             <button
@@ -60,8 +94,8 @@ export default function Pagination({
                 height: '34px',
                 padding: '0 8px',
                 borderRadius: 'var(--radius-sm)',
-                border: isSelected ? '1.5px solid var(--accent-blue)' : '1px solid var(--color-border)',
-                backgroundColor: isSelected ? 'var(--accent-blue)' : 'var(--bg-surface)',
+                border: isSelected ? '1.5px solid var(--brand-primary)' : '1px solid var(--color-border)',
+                backgroundColor: isSelected ? 'var(--brand-primary)' : 'var(--bg-surface)',
                 color: isSelected ? '#ffffff' : 'var(--text-primary)',
                 fontWeight: isSelected ? 700 : 600,
                 fontSize: '13px',

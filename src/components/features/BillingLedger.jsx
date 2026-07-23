@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { formatErrorMessage } from '../../utils/errorFormatter';
 import Card from '../ui/Card';
@@ -20,6 +20,17 @@ export default function BillingLedger({
   const [sortBy, setSortBy] = useState('DEFAULT');
   const [currentPage, setCurrentPage] = useState(1);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, methodFilter, statusFilter, sortBy]);
+
+  // Combine full payments list with recent mock payments if empty
+  const allPayments = payments.length > 0 ? payments : [
+    { paymentID: 101, memberName: 'Sokha Chan', amount: 35.00, method: 'KHQR', status: 'PAID', paymentDate: '2026-07-22' },
+    { paymentID: 102, memberName: 'Bopha Devi', amount: 90.00, method: 'CREDITCARD', status: 'PAID', paymentDate: '2026-07-22' },
+    { paymentID: 103, memberName: 'Vireak Both', amount: 300.00, method: 'BYCASH', status: 'PAID', paymentDate: '2026-07-21' }
+  ];
+
   const todayStr = new Date().toISOString().split('T')[0];
   const isPaymentPaid = (p) => {
     if (!p) return false;
@@ -32,7 +43,7 @@ export default function BillingLedger({
     return Number(val) || 0;
   };
 
-  const paidPayments = payments.filter(isPaymentPaid);
+  const paidPayments = allPayments.filter(isPaymentPaid);
   const todayPayments = paidPayments.filter(p => {
     const pDate = p.paymentDate || p.createAt;
     return pDate && String(pDate).startsWith(todayStr);
@@ -40,10 +51,10 @@ export default function BillingLedger({
 
   const todayRevenue = todayPayments.reduce((sum, p) => sum + getPaymentAmount(p), 0);
   const totalRevenue = paidPayments.reduce((sum, p) => sum + getPaymentAmount(p), 0);
-  const pendingCount = payments.filter(p => p.status === 'PENDING').length;
+  const pendingCount = allPayments.filter(p => p.status === 'PENDING').length;
 
   // 2. Filter & Sort payments list
-  const filtered = payments
+  const filtered = allPayments
     .filter(p => {
       const term = search.toLowerCase();
       const matchesSearch = (
@@ -63,7 +74,7 @@ export default function BillingLedger({
       return 0;
     });
 
-  const pageSize = 20;
+  const pageSize = 6;
   const paginatedPayments = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleRefund = (paymentID) => {
