@@ -173,12 +173,15 @@ export default function useGymApi() {
     try {
       const user = await loginApi(username, password);
       setCashier(user);
+      // Immediately populate live plans, members, and transactions on login
+      await checkBackend().catch(() => {});
+      await refreshDatabase().catch(() => {});
       return user;
     } catch (err) {
       setError(err.message);
       throw err;
     }
-  }, []);
+  }, [checkBackend, refreshDatabase]);
 
   const fetchPlans = useCallback(async () => {
     setIsLoading(true);
