@@ -6,6 +6,7 @@ import InputField from '../ui/InputField';
 import Button from '../ui/Button';
 import Pagination from '../ui/Pagination';
 import MembershipFormModal from './MembershipFormModal';
+import ConfirmModal from '../ui/ConfirmModal';
 
 export default function MembershipManagement({
   recentMembers = [],
@@ -26,6 +27,32 @@ export default function MembershipManagement({
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [sortBy, setSortBy] = useState('DEFAULT');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [cancellingItem, setCancellingItem] = useState(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancel = (sub) => {
+    if (cashier?.role !== 'ADMIN') {
+      onShowAdminWarning();
+      return;
+    }
+    setCancellingItem(sub);
+  };
+
+  const handleConfirmCancelMembership = async () => {
+    if (!cancellingItem) return;
+    setIsCancelling(true);
+    try {
+      await onCancelMembership(cancellingItem.id || cancellingItem.membershipID);
+    } catch (err) {
+      toast.error(formatErrorMessage(err));
+    } finally {
+      setIsCancelling(false);
+      setCancellingItem(null);
+    }
+  };
 
   useEffect(() => {
     if (initialPlanFilter) {
@@ -33,10 +60,6 @@ export default function MembershipManagement({
     }
   }, [initialPlanFilter]);
   
-  // Modal states
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
   // 1. Calculate stats from memberships list
   const activeCount = recentMembers.filter(m => m.status === 'ACTIVE').length;
   const pendingCount = recentMembers.filter(m => m.status === 'PENDING').length;
@@ -96,14 +119,6 @@ export default function MembershipManagement({
 
   const pageSize = 6;
   const paginatedSubscriptions = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-  const handleCancel = (membershipID) => {
-    if (cashier?.role !== 'ADMIN') {
-      onShowAdminWarning();
-      return;
-    }
-    onCancelMembership(membershipID);
-  };
 
   const handleAddMembershipClick = () => {
     setIsModalOpen(true);
@@ -373,7 +388,7 @@ export default function MembershipManagement({
                         {m.status !== 'CANCELLED' && (
                           <Button
                             variant="ghost"
-                            onClick={() => handleCancel(m.id)}
+                            onClick={() => handleCancel(m)}
                             style={{
                               minHeight: '32px',
                               padding: '4px 10px',
@@ -418,6 +433,18 @@ export default function MembershipManagement({
         })}
         plans={plans}
         isLoading={isSaving}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(cancellingItem)}
+        onClose={() => setCancellingItem(null)}
+        onConfirm={handleConfirmCancelMembership}
+        title="Cancel Membership Subscription"
+        message="Are you sure you want to cancel this membership? The status will be updated to Cancelled."
+        itemName={cancellingItem ? `${cancellingItem.memberName || 'Member'} (${cancellingItem.planName || 'Membership'})` : ''}
+        confirmText="Cancel Subscription"
+        variant="danger"
+        isLoading={isCancelling}
       />
     </div>
   );

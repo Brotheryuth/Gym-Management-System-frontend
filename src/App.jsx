@@ -18,6 +18,7 @@ import MembershipManagement from './components/features/MembershipManagement';
 import PlanManagement from './components/features/PlanManagement';
 import BillingLedger from './components/features/BillingLedger';
 import AdminWarningModal from './components/ui/AdminWarningModal';
+import ConfirmModal from './components/ui/ConfirmModal';
 import './App.css';
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
     registeredMember, editingMemberID, isPaymentOpen, setIsPaymentOpen,
     pendingSubscription, activeReceipt, profileMember, setProfileMember,
     directSubMemberID, setDirectSubMemberID, paymentError,
+    deletingMemberItem, setDeletingMemberItem, handleConfirmDeleteMember,
     handleFormChange, handleRegisterMember, handleDeleteMember, handleEditMember,
     handlePayPending, handleCreateMembership, handleCreateSubscriptionDirect,
     handlePaymentMethodChange, handleConfirmPayment, handleResetFlow, handleSubscribeFromProfile
@@ -224,6 +226,18 @@ export default function App() {
       )}
 
       <AdminWarningModal isOpen={adminWarningOpen} onClose={() => setAdminWarningOpen(false)} />
+
+      <ConfirmModal
+        isOpen={Boolean(deletingMemberItem)}
+        onClose={() => setDeletingMemberItem(null)}
+        onConfirm={handleConfirmDeleteMember}
+        title="Delete Member Profile"
+        message="Are you sure you want to delete this member profile? All associated active subscriptions will be removed."
+        itemName={deletingMemberItem ? deletingMemberItem.name : ''}
+        confirmText="Delete Member"
+        variant="danger"
+        isLoading={isLoading}
+      />
     </div>
   );
 }

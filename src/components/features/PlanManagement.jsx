@@ -5,6 +5,7 @@ import Card from '../ui/Card';
 import InputField from '../ui/InputField';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
+import ConfirmModal from '../ui/ConfirmModal';
 import Pagination from '../ui/Pagination';
 
 export default function PlanManagement({
@@ -18,6 +19,8 @@ export default function PlanManagement({
 }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
+  const [deletingPlanItem, setDeletingPlanItem] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   
   // Form fields
@@ -68,17 +71,25 @@ export default function PlanManagement({
     setIsFormOpen(true);
   };
 
-  const handleDelete = (planID) => {
+  const handleDelete = (plan) => {
     if (cashier?.role !== 'ADMIN') {
       onShowAdminWarning();
       return;
     }
-    if (window.confirm('Are you sure you want to delete this plan?')) {
-      onDeletePlan(planID)
-        .then(() => toast.success('Gym plan deleted successfully.'))
-        .catch(err => {
-          toast.error(formatErrorMessage(err));
-        });
+    setDeletingPlanItem(plan);
+  };
+
+  const handleConfirmDeletePlan = async () => {
+    if (!deletingPlanItem) return;
+    setIsDeleting(true);
+    try {
+      await onDeletePlan(deletingPlanItem.planID);
+      toast.success('Gym plan deleted successfully.');
+    } catch (err) {
+      toast.error(formatErrorMessage(err));
+    } finally {
+      setIsDeleting(false);
+      setDeletingPlanItem(null);
     }
   };
 
@@ -227,7 +238,7 @@ export default function PlanManagement({
                       </Button>
                       <Button
                         variant="ghost"
-                        onClick={() => handleDelete(p.planID)}
+                        onClick={() => handleDelete(p)}
                         style={{ minHeight: '32px', padding: '4px 10px', fontSize: '12px', flex: 1, color: 'var(--color-error)' }}
                       >
                         Delete
@@ -249,51 +260,34 @@ export default function PlanManagement({
         );
       })()}
 
-      {/* 4. Edit/Add Plan Dialog Modal */}
       <Modal
         isOpen={isFormOpen}
-        title={editingPlan ? 'Modify Membership Tier' : 'Create New Gym Plan'}
         onClose={() => setIsFormOpen(false)}
+        title={editingPlan ? 'Edit Gym Plan' : 'Create New Gym Plan'}
       >
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {formError && (
-            <div style={{
-              backgroundColor: 'var(--color-error-bg)',
-              border: '1.5px solid var(--color-error)',
-              color: 'var(--color-error)',
-              padding: '12px',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '13px',
-              fontWeight: 600
-            }}>
-              {formError}
-            </div>
-          )}
-
+        <form onSubmit={handleSubmit}>
           <InputField
-            label="Plan Name"
-            placeholder="e.g. Bronze Starter Pack"
+            label="Plan Title / Name"
+            placeholder="e.g. Premium Monthly Access"
             value={planName}
             onChange={(e) => setPlanName(e.target.value)}
           />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <InputField
-              label="Tier Price ($USD)"
-              type="number"
-              placeholder="e.g. 49.99"
-              value={planPrice}
-              onChange={(e) => setPlanPrice(e.target.value)}
-              step="0.01"
-            />
-            <InputField
-              label="Duration (Months)"
-              type="number"
-              placeholder="e.g. 1"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-            />
-          </div>
+          <InputField
+            label="Price ($)"
+            type="number"
+            placeholder="e.g. 50"
+            value={planPrice}
+            onChange={(e) => setPlanPrice(e.target.value)}
+          />
+
+          <InputField
+            label="Duration (Months)"
+            type="number"
+            placeholder="e.g. 1"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+          />
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
             <Button
@@ -313,6 +307,18 @@ export default function PlanManagement({
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal
+        isOpen={Boolean(deletingPlanItem)}
+        onClose={() => setDeletingPlanItem(null)}
+        onConfirm={handleConfirmDeletePlan}
+        title="Delete Gym Plan"
+        message="Are you sure you want to delete this plan? Members currently on this plan will not be affected."
+        itemName={deletingPlanItem ? deletingPlanItem.planName : ''}
+        confirmText="Delete Plan"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

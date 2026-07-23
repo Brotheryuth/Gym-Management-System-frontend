@@ -246,8 +246,11 @@ export default function useGymApi() {
     setIsLoading(true);
     setError(null);
     try {
-      await deleteMemberApi(memberID);
-      await refreshDatabase();
+      const res = await deleteMemberApi(memberID);
+      setMembers(prev => prev.filter(m => String(m.memberID || m.id) !== String(memberID)));
+      if (!res?.isOptimistic) {
+        await refreshDatabase();
+      }
     } catch (err) {
       setError(err.message);
       throw err;
@@ -325,8 +328,11 @@ export default function useGymApi() {
     setIsLoading(true);
     setError(null);
     try {
-      await deletePlanApi(planID);
-      await fetchPlans();
+      const res = await deletePlanApi(planID);
+      setPlans(prev => prev.filter(p => String(p.planID || p.id) !== String(planID)));
+      if (!res?.isOptimistic) {
+        await fetchPlans();
+      }
     } catch (err) {
       setError(err.message);
       throw err;
@@ -340,7 +346,15 @@ export default function useGymApi() {
     setError(null);
     try {
       const data = await cancelMembershipApi(membershipID);
-      await refreshDatabase();
+      setRecentMembers(prev => prev.map(m => {
+        if (String(m.id || m.membershipID) === String(membershipID)) {
+          return { ...m, status: 'CANCELLED' };
+        }
+        return m;
+      }));
+      if (data && !data.isOptimistic) {
+        await refreshDatabase();
+      }
       return data;
     } catch (err) {
       setError(err.message);

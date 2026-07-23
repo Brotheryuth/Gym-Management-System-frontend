@@ -66,6 +66,23 @@ export default function LoginForm({ onLogin, onBypass, isLoading: globalLoading,
               <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Cashier Terminal Portal</p>
             </div>
 
+            {/* Screen Size & Device Support Mascot Notice - Only shown on small mobile screens */}
+            <div className="mobile-device-notice">
+              <div className="mobile-notice-mascot">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="28">
+                  <rect x="7" y="9" width="26" height="18" rx="3" stroke="#d97706" strokeWidth="2.5" fill="#fef3c7" />
+                  <path d="M 14 27 L 11 33 M 26 27 L 29 33" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+                  <circle cx="15" cy="17" r="2" fill="#d97706" />
+                  <circle cx="25" cy="17" r="2" fill="#d97706" />
+                  <path d="M 17 21 Q 20 24 23 21" stroke="#d97706" strokeWidth="2" strokeLinecap="round" fill="none" />
+                </svg>
+              </div>
+              <div className="mobile-notice-content">
+                <span className="mobile-notice-title">Best Experience on Desktop</span>
+                <p className="mobile-notice-desc">This system is designed for computers. Some features may not fit well on phone screens.</p>
+              </div>
+            </div>
+
             {activeError && (
               <div style={{
                 backgroundColor: 'var(--color-error-bg)',
@@ -108,7 +125,7 @@ export default function LoginForm({ onLogin, onBypass, isLoading: globalLoading,
             </Button>
 
             {onBypass && (
-              <div style={{ display: 'flex', gap: '12px', marginTop: '12px', width: '100%' }}>
+              <div className="login-bypass-group" style={{ display: 'flex', gap: '12px', marginTop: '12px', width: '100%' }}>
                 <Button
                   type="button"
                   variant="secondary"

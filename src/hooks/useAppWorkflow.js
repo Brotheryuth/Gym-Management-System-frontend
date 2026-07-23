@@ -102,18 +102,25 @@ export default function useAppWorkflow({
     }
   };
 
-  const handleDeleteMember = async (memberID) => {
+  const [deletingMemberItem, setDeletingMemberItem] = useState(null);
+
+  const handleDeleteMember = (memberID, memberName) => {
     if (cashier?.role !== 'ADMIN') {
       setAdminWarningOpen(true);
       return;
     }
-    if (window.confirm('Are you sure you want to delete this member profile?')) {
-      try {
-        await deleteMember(memberID);
-        toast.success('Member profile deleted successfully.');
-      } catch (err) {
-        toast.error(formatErrorMessage(err));
-      }
+    setDeletingMemberItem({ id: memberID, name: memberName || `Member #${memberID}` });
+  };
+
+  const handleConfirmDeleteMember = async () => {
+    if (!deletingMemberItem) return;
+    try {
+      await deleteMember(deletingMemberItem.id);
+      toast.success('Member profile deleted successfully.');
+    } catch (err) {
+      toast.error(formatErrorMessage(err));
+    } finally {
+      setDeletingMemberItem(null);
     }
   };
 
@@ -279,6 +286,9 @@ export default function useAppWorkflow({
     directSubMemberID,
     setDirectSubMemberID,
     paymentError,
+    deletingMemberItem,
+    setDeletingMemberItem,
+    handleConfirmDeleteMember,
     handleFormChange,
     handleRegisterMember,
     handleDeleteMember,

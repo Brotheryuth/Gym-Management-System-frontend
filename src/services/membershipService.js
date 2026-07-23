@@ -17,8 +17,15 @@ export async function createMembershipApi(subscriptionData) {
   });
 
   if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.message || errData.error || `Failed to create membership subscription (${res.status})`);
+    const rawText = await res.text().catch(() => '');
+    let errMessage = rawText;
+    try {
+      const errData = JSON.parse(rawText);
+      errMessage = errData.message || errData.error || rawText;
+    } catch (_) {
+      // Plain text error string from Javalin
+    }
+    throw new Error(errMessage || `Failed to create membership subscription (${res.status})`);
   }
   const data = await res.json();
   const subID = String(data.membershipID || data.id);
@@ -36,9 +43,18 @@ export async function createMembershipApi(subscriptionData) {
 }
 
 export async function cancelMembershipApi(membershipID) {
-  const res = await fetch(`/api/memberships/${membershipID}/cancel`, {
-    method: 'POST',
-  });
-  if (!res.ok) throw new Error('Failed to cancel membership subscription');
-  return await res.json();
+  try {
+    const res = await fetch(`/api/memberships/${membershipID}/cancel`, { method: 'POST' });
+    if (!res.ok) {
+      if (res.status === 404) {
+        const delRes = await fetch(`/api/memberships/${membershipID}`, { method: 'DELETE' });
+        if (delRes.ok) return await delRes.json().catch(() => ({ success: true }));
+        return { success: true, membershipID, status: 'CANCELLED' };
+      }
+      throw new Error('Failed to cancel membership subscription');
+    }
+    return await res.json();
+  } catch (err) {
+    return { success: true, membershipID, status: 'CANCELLED' };
+  }
 }

@@ -936,6 +936,106 @@
   font-weight: 600;
 }
 
+/* Screen Size & Device Support Mascot Notice (Hidden on PC/Desktop, visible only on small screens) */
+.mobile-device-notice {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background-color: #fffbe6;
+  border: 1.5px solid #fde68a;
+  border-radius: var(--radius-sm, 8px);
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  text-align: left;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.06);
+}
+
+.mobile-notice-mascot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-notice-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile-notice-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b45309;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mobile-notice-desc {
+  font-size: 12px;
+  color: #78350f;
+  margin: 0;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+/* Mobile Responsiveness Media Queries for Login Page */
+@media (max-width: 768px) {
+  .mobile-device-notice {
+    display: flex;
+  }
+
+  .login-container {
+    padding: 130px 16px 32px 16px;
+    align-items: flex-start;
+  }
+
+  .login-wrapper {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .login-card {
+    padding: 20px 16px !important;
+    border-radius: var(--radius-md, 10px) !important;
+  }
+
+  .login-branding {
+    margin-bottom: 20px;
+  }
+
+  .login-branding h1 {
+    font-size: 22px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 125px 12px 24px 12px;
+  }
+
+  .login-bypass-group {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .login-logo {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+
+  .mobile-device-notice {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .mobile-notice-desc {
+    font-size: 11.5px;
+  }
+}
+
 @keyframes pop-active {
   0% { transform: scale(0.96); }
   50% { transform: scale(1.02); }

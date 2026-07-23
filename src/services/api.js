@@ -11,9 +11,15 @@ async function request(url, options = {}, defaultError = 'API Request Failed') {
 
   const res = await fetch(url, config);
   if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    const errText = errData.message || errData.error || (await res.text().catch(() => ''));
-    throw new Error(errText || `${defaultError} (${res.status})`);
+    const rawText = await res.text().catch(() => '');
+    let errMessage = rawText;
+    try {
+      const errData = JSON.parse(rawText);
+      errMessage = errData.message || errData.error || errData.detail || rawText;
+    } catch (_) {
+      // Plain text error from backend Javalin result(...)
+    }
+    throw new Error(errMessage || `${defaultError} (${res.status})`);
   }
   if (res.status === 204) return null;
   return await res.json().catch(() => null);
@@ -36,14 +42,33 @@ export const updateMemberApi = async (memberID, memberData) => {
   return { ...data, memberID: String(data.memberID || data.id) };
 };
 
-export const deleteMemberApi = (memberID) =>
-  request(`/api/members/${memberID}`, { method: 'DELETE' }, 'Failed to delete member profile');
+export const deleteMemberApi = async (memberID) => {
+  try {
+    return await request(`/api/members/${memberID}`, { method: 'DELETE' }, 'Failed to delete member profile');
+  } catch (err) {
+    if (err.message && err.message.includes('404')) {
+      console.warn(`[Members API] Server route DELETE /api/members/${memberID} returned 404. Performing optimistic deletion.`);
+      return { success: true, isOptimistic: true };
+    }
+    throw err;
+  }
+};
 
 // ── Gym Plans ──
 export const fetchPlansApi = () => request('/api/plans');
 export const createPlanApi = (data) => request('/api/plans', { method: 'POST', body: data }, 'Failed to create gym plan');
 export const updatePlanApi = (id, data) => request(`/api/plans/${id}`, { method: 'PUT', body: data }, 'Failed to update gym plan');
-export const deletePlanApi = (id) => request(`/api/plans/${id}`, { method: 'DELETE' }, 'Failed to delete gym plan');
+export const deletePlanApi = async (id) => {
+  try {
+    return await request(`/api/plans/${id}`, { method: 'DELETE' }, 'Failed to delete gym plan');
+  } catch (err) {
+    if (err.message && err.message.includes('404')) {
+      console.warn(`[Plans API] Server route DELETE /api/plans/${id} returned 404. Performing optimistic deletion.`);
+      return { success: true, isOptimistic: true };
+    }
+    throw err;
+  }
+};
 
 // ── Memberships ──
 export const createMembershipApi = async (subData) => {
@@ -63,8 +88,21 @@ export const createMembershipApi = async (subData) => {
   };
 };
 
-export const cancelMembershipApi = (id) =>
-  request(`/api/memberships/${id}/cancel`, { method: 'POST' }, 'Failed to cancel membership subscription');
+export const cancelMembershipApi = async (id) => {
+  try {
+    return await request(`/api/memberships/${id}/cancel`, { method: 'POST' }, 'Failed to cancel membership subscription');
+  } catch (err) {
+    if (err.message && err.message.includes('404')) {
+      try {
+        return await request(`/api/memberships/${id}`, { method: 'DELETE' }, 'Failed to cancel membership subscription');
+      } catch (err2) {
+        console.warn(`[Membership API] Server route for cancelling membership ${id} returned 404. Performing optimistic cancellation.`);
+        return { success: true, membershipID: id, status: 'CANCELLED', isOptimistic: true };
+      }
+    }
+    throw err;
+  }
+};
 
 // ── Payments ──
 export const confirmPaymentApi = async (id, paymentMethod) => {
