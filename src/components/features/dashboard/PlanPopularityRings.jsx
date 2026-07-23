@@ -89,8 +89,11 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [], on
 
   const hoveredItem = hoveredIndex !== null ? items[hoveredIndex] : null;
 
-  // Calculate overlay tooltip positioning next to cursor on the right
-  const tooltipX = Math.min(mousePos.x + 14, 260);
+  // Smart overlay positioning: when cursor approaches right edge (>150px), flip tooltip to left side of cursor so it floats 100% unclipped and never triggers layout shifts
+  const isNearRightEdge = mousePos.x > 150;
+  const tooltipX = isNearRightEdge
+    ? Math.max(10, mousePos.x - 120)
+    : mousePos.x + 14;
   const tooltipY = Math.max(10, mousePos.y - 32);
 
   return (
@@ -135,7 +138,7 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [], on
               />
             ))}
 
-            {/* Concentric Progress Rings */}
+            {/* Concentric Progress Rings with Invisible 360 Hit Target */}
             {items.map((item, idx) => {
               const isHovered = hoveredIndex === idx;
               const isDimmed = hoveredIndex !== null && !isHovered;
@@ -147,34 +150,46 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [], on
                 : (isCardHovered ? (hoverProgress ? targetOffset : item.circumference) : (isAnimated ? targetOffset : item.circumference));
 
               return (
-                <circle
-                  key={`ring-${idx}`}
-                  cx={center}
-                  cy={center}
-                  r={item.r}
-                  fill="none"
-                  stroke={item.color}
-                  strokeWidth={isHovered ? 11 : baseStrokeWidth}
-                  strokeDasharray={item.circumference}
-                  strokeDashoffset={currentOffset}
-                  strokeLinecap="round"
-                  onMouseEnter={() => handleItemHover(idx)}
-                  onMouseLeave={() => { setHoveredIndex(null); setAnimatingRingIdx(null); }}
-                  onClick={() => onSelectPlan && onSelectPlan(item.name)}
-                  style={{
-                    cursor: 'pointer',
-                    pointerEvents: 'stroke',
-                    opacity: isDimmed ? 0.25 : 1,
-                    filter: isHovered
-                      ? `drop-shadow(0 0 10px ${item.color}) brightness(1.2)`
-                      : (isCardHovered ? `drop-shadow(0 0 3px ${item.color})` : 'none'),
-                    transition: isHovered
-                      ? (isRingGrowing ? 'stroke-dashoffset 1.3s cubic-bezier(0.34, 1.25, 0.64, 1), stroke-width 0.3s ease, opacity 0.3s ease, filter 0.3s ease' : 'none')
-                      : (isCardHovered && !hoverProgress
-                          ? 'none'
-                          : `stroke-dashoffset 2.25s cubic-bezier(0.34, 1.25, 0.64, 1) ${idx * 110}ms, stroke-width 0.3s ease, opacity 0.3s ease, filter 0.3s ease`)
-                  }}
-                />
+                <g key={`ring-group-${idx}`}>
+                  {/* Invisible 360-degree hit-target circle */}
+                  <circle
+                    cx={center}
+                    cy={center}
+                    r={item.r}
+                    fill="none"
+                    stroke="transparent"
+                    strokeWidth={16}
+                    style={{ cursor: 'pointer', pointerEvents: 'stroke' }}
+                    onMouseEnter={() => handleItemHover(idx)}
+                    onMouseLeave={() => { setHoveredIndex(null); setAnimatingRingIdx(null); }}
+                    onClick={() => onSelectPlan && onSelectPlan(item.name)}
+                  />
+
+                  {/* Visible Progress Ring */}
+                  <circle
+                    cx={center}
+                    cy={center}
+                    r={item.r}
+                    fill="none"
+                    stroke={item.color}
+                    strokeWidth={isHovered ? 11 : baseStrokeWidth}
+                    strokeDasharray={item.circumference}
+                    strokeDashoffset={currentOffset}
+                    strokeLinecap="round"
+                    style={{
+                      pointerEvents: 'none',
+                      opacity: isDimmed ? 0.25 : 1,
+                      filter: isHovered
+                        ? `drop-shadow(0 0 10px ${item.color}) brightness(1.2)`
+                        : (isCardHovered ? `drop-shadow(0 0 3px ${item.color})` : 'none'),
+                      transition: isHovered
+                        ? (isRingGrowing ? 'stroke-dashoffset 1.3s cubic-bezier(0.34, 1.25, 0.64, 1), stroke-width 0.3s ease, opacity 0.3s ease, filter 0.3s ease' : 'none')
+                        : (isCardHovered && !hoverProgress
+                            ? 'none'
+                            : `stroke-dashoffset 2.25s cubic-bezier(0.34, 1.25, 0.64, 1) ${idx * 110}ms, stroke-width 0.3s ease, opacity 0.3s ease, filter 0.3s ease`)
+                    }}
+                  />
+                </g>
               );
             })}
           </svg>
@@ -225,9 +240,12 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [], on
                   cursor: 'pointer',
                   padding: '5px 8px',
                   borderRadius: '6px',
-                  backgroundColor: isHovered ? 'var(--brand-primary-light)' : 'transparent',
+                  backgroundColor: isHovered ? `${item.color}18` : 'transparent',
+                  border: '1px solid',
+                  borderColor: isHovered ? `${item.color}40` : 'transparent',
+                  boxSizing: 'border-box',
                   opacity: isDimmed ? 0.35 : 1,
-                  transition: 'background-color 0.2s ease, opacity 0.2s ease'
+                  transition: 'background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>

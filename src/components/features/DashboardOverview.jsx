@@ -146,7 +146,7 @@ export default function DashboardOverview({
         />
 
         {/* Column 3: Stacked Payment Distribution + Plan Popularity Ring Analytics */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0 }}>
           <PaymentDistribution
             khqrSum={khqrSum}
             cashSum={cashSum}

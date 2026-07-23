@@ -67,18 +67,18 @@ export default function MemberDemographics({
           )}
         </div>
 
-        {/* Legend */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginTop: '3px', fontSize: '11px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--brand-primary)' }} />
+        {/* Legend - Equal 3 Columns Horizontally */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginTop: '4px', fontSize: '10.5px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--brand-primary)', flexShrink: 0 }} />
             <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Male ({malePct}%)</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-warm)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--accent-warm)', flexShrink: 0 }} />
             <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Female ({femalePct}%)</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4bbe04' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#4bbe04', flexShrink: 0 }} />
             <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Other ({adjustedOtherPct}%)</span>
           </div>
         </div>

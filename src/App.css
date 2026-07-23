@@ -1593,3 +1593,150 @@ body .app-shell .main-layout .dashboard-header button.logout-btn:not(:disabled):
 }
 
 
+/* Grid Utility Classes */
+.purity-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.purity-grid-2-3 {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 1fr;
+  gap: 16px;
+}
+
+.purity-grid-3-2 {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 16px;
+}
+
+/* 13-inch to 14-inch Displays (1100px - 1440px viewport width) */
+@media (max-width: 1440px) {
+  .app-shell {
+    grid-template-columns: 220px 1fr !important;
+  }
+
+  .app-sidebar {
+    padding: 18px 14px !important;
+  }
+
+  .dashboard-overview-container {
+    padding: 14px 18px !important;
+    gap: 14px !important;
+  }
+
+  .header-title {
+    font-size: 18px !important;
+  }
+
+  .purity-grid-4 {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .purity-grid-2-3 {
+    grid-template-columns: 1.15fr 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  .purity-grid-3-2 {
+    grid-template-columns: 1.15fr 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+/* Medium / Tablet / Split-Screen Displays (< 1200px viewport width) */
+@media (max-width: 1200px) {
+  .purity-grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .purity-grid-2-3 {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 14px !important;
+  }
+
+  .purity-grid-3-2 {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+}
+
+/* 15-inch - 16-inch Laptops (1441px - 1799px viewport width) */
+@media (min-width: 1441px) and (max-width: 1799px) {
+  .app-shell {
+    grid-template-columns: 240px 1fr !important;
+  }
+
+  .dashboard-overview-container {
+    padding: 18px 24px !important;
+    gap: 16px !important;
+  }
+
+  .purity-grid-4 {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .purity-grid-2-3 {
+    grid-template-columns: 1.15fr 1fr 1fr !important;
+    gap: 16px !important;
+  }
+}
+
+/* 17-inch - 18-inch Workstations & 4K Displays (1800px+ viewport width) */
+@media (min-width: 1800px) {
+  .app-shell {
+    grid-template-columns: 260px 1fr !important;
+  }
+
+  .dashboard-overview-container,
+  .dashboard-grid {
+    max-width: 1720px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 24px 32px !important;
+    gap: 20px !important;
+  }
+
+  .purity-grid-4 {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  .purity-grid-2-3 {
+    grid-template-columns: 1.15fr 1fr 1fr !important;
+    gap: 20px !important;
+  }
+}
+
+/* Ensure smooth un-truncated scrolling for main-layout */
+.main-layout {
+  min-height: 100vh;
+  overflow-y: auto !important;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Smooth Table Responsiveness Container */
+.table-responsive-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+
