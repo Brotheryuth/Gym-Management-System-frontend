@@ -32,13 +32,13 @@ export default function MetricCards({
             {salesChangePercent >= 0 ? `+${salesChangePercent}%` : `${salesChangePercent}%`}
           </div>
         </div>
-        <div>
+        <div className="analytics-progress-row">
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
             <span>Daily Goal ($500)</span>
             <span style={{ fontWeight: 700 }}>{revenueGoalPct}%</span>
           </div>
-          <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
-            <div style={{ width: `${revenueGoalPct}%`, height: '100%', background: 'var(--brand-primary)', borderRadius: '3px', transition: 'width 0.5s ease-in-out' }} />
+          <div className="analytics-progress-track" style={{ height: '6px', background: 'var(--progress-track-bg, #E2E8F0)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div className="analytics-progress-bar" style={{ width: `${revenueGoalPct}%`, height: '100%', background: 'var(--brand-primary)', borderRadius: '3px' }} />
           </div>
         </div>
       </div>
@@ -61,7 +61,7 @@ export default function MetricCards({
             </div>
           </div>
         </div>
-        <div>
+        <div className="analytics-progress-row">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
             <span>Capacity (150 max)</span>
             <span style={{
@@ -71,8 +71,8 @@ export default function MetricCards({
               {expiringSoonCount > 0 ? `⚠️ ${expiringSoonCount} Expiring Soon (<7d)` : `${capacityGoalPct}% Capacity`}
             </span>
           </div>
-          <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
-            <div style={{ width: `${capacityGoalPct}%`, height: '100%', background: '#4bbe04', borderRadius: '3px', transition: 'width 0.5s ease-in-out' }} />
+          <div className="analytics-progress-track" style={{ height: '6px', background: 'var(--progress-track-bg, #E2E8F0)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div className="analytics-progress-bar" style={{ width: `${capacityGoalPct}%`, height: '100%', background: '#4bbe04', borderRadius: '3px' }} />
           </div>
         </div>
       </div>
@@ -93,13 +93,13 @@ export default function MetricCards({
             {newClientsChangePercent >= 0 ? `+${newClientsChangePercent}%` : `${newClientsChangePercent}%`}
           </div>
         </div>
-        <div>
+        <div className="analytics-progress-row">
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
             <span>Daily Target (10)</span>
             <span style={{ fontWeight: 700 }}>{newClientsGoalPct}%</span>
           </div>
-          <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
-            <div style={{ width: `${newClientsGoalPct}%`, height: '100%', background: 'var(--accent-warm)', borderRadius: '3px', transition: 'width 0.5s ease-in-out' }} />
+          <div className="analytics-progress-track" style={{ height: '6px', background: 'var(--progress-track-bg, #E2E8F0)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div className="analytics-progress-bar" style={{ width: `${newClientsGoalPct}%`, height: '100%', background: 'var(--accent-warm)', borderRadius: '3px' }} />
           </div>
         </div>
       </div>
@@ -117,13 +117,13 @@ export default function MetricCards({
             Live
           </div>
         </div>
-        <div>
+        <div className="analytics-progress-row">
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
             <span>System Health</span>
             <span style={{ fontWeight: 700, color: '#4bbe04' }}>100% Online</span>
           </div>
-          <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
-            <div style={{ width: '100%', height: '100%', background: '#4bbe04', borderRadius: '3px' }} />
+          <div className="analytics-progress-track" style={{ height: '6px', background: 'var(--progress-track-bg, #E2E8F0)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div className="analytics-progress-bar" style={{ width: '100%', height: '100%', background: '#4bbe04', borderRadius: '3px' }} />
           </div>
         </div>
       </div>

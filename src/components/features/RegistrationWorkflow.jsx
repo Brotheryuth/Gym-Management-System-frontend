@@ -120,6 +120,7 @@ export default function RegistrationWorkflow({
         <RecentMembersList
           members={recentMembers}
           isLoading={isLoading && recentMembers.length === 0}
+          onViewProfile={onViewProfile}
         />
       </div>
     </div>

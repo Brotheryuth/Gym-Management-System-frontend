@@ -39,9 +39,9 @@ export default function MemberDemographics({
         <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Gender Split</span>
         
         {/* Segmented Horizontal Bar */}
-        <div style={{
+        <div className="analytics-progress-track" style={{
           height: '16px',
-          background: 'var(--color-border)',
+          background: 'var(--progress-track-bg, #E2E8F0)',
           borderRadius: '8px',
           overflow: 'hidden',
           display: 'flex',
@@ -49,19 +49,19 @@ export default function MemberDemographics({
           marginTop: '4px'
         }}>
           {totalCount === 0 ? (
-            <div style={{ width: '100%', height: '100%', background: 'var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: 'var(--text-muted)' }}>
+            <div style={{ width: '100%', height: '100%', background: 'var(--progress-track-bg, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: 'var(--text-muted)' }}>
               No active members
             </div>
           ) : (
             <>
               {genderStats.male > 0 && (
-                <div style={{ width: `${malePct}%`, height: '100%', background: 'var(--brand-primary)', transition: 'width 0.5s ease' }} title={`Male: ${genderStats.male}`} />
+                <div className="analytics-progress-bar" style={{ width: `${malePct}%`, height: '100%', background: 'var(--brand-primary)', cursor: 'pointer' }} title={`Male: ${genderStats.male} (${malePct}%)`} />
               )}
               {genderStats.female > 0 && (
-                <div style={{ width: `${femalePct}%`, height: '100%', background: 'var(--accent-warm)', transition: 'width 0.5s ease' }} title={`Female: ${genderStats.female}`} />
+                <div className="analytics-progress-bar" style={{ width: `${femalePct}%`, height: '100%', background: 'var(--accent-warm)', cursor: 'pointer' }} title={`Female: ${genderStats.female} (${femalePct}%)`} />
               )}
               {genderStats.other > 0 && (
-                <div style={{ width: `${adjustedOtherPct}%`, height: '100%', background: '#4bbe04', transition: 'width 0.5s ease' }} title={`Other: ${genderStats.other}`} />
+                <div className="analytics-progress-bar" style={{ width: `${adjustedOtherPct}%`, height: '100%', background: '#4bbe04', cursor: 'pointer' }} title={`Other: ${genderStats.other} (${adjustedOtherPct}%)`} />
               )}
             </>
           )}
@@ -92,13 +92,13 @@ export default function MemberDemographics({
           {ageGroups.map(group => {
             const pct = totalCount > 0 ? Math.round((group.count / totalCount) * 100) : 0;
             return (
-              <div key={group.label}>
+              <div key={group.label} className="analytics-progress-row">
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
                   <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{group.label}</span>
                   <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>{group.count} ({pct}%)</span>
                 </div>
-                <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ width: `${pct}%`, height: '100%', background: 'var(--brand-primary)', borderRadius: '3px', opacity: 0.85, transition: 'width 0.5s ease' }} />
+                <div className="analytics-progress-track" style={{ height: '6px', background: 'var(--progress-track-bg, #E2E8F0)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div className="analytics-progress-bar" style={{ width: `${pct}%`, height: '100%', background: 'var(--brand-primary)', borderRadius: '3px', opacity: 0.85 }} />
                 </div>
               </div>
             );

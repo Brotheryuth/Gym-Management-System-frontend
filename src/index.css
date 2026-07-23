@@ -26,12 +26,17 @@
   --accent-teal-light: rgba(99, 102, 241, 0.08);
   --accent-teal-border: rgba(99, 102, 241, 0.2);
 
+  --accent-warm: #ee0b0b;              /* Indigo/Purple fill for Cash, Female split & Signups */
+  --accent-warm-hover: #4F46E5;
+  --accent-warm-light: rgba(99, 102, 241, 0.1);
+
   /* Typography — warmer dark, softer muted */
   --text-primary: #292524;           /* Warm near-black (was cool #0F172A) */
   --text-muted: #78716C;             /* Warm stone grey (was cool #64748B) */
 
-  /* Borders — warm tint instead of cool slate */
+  /* Borders & Progress Track Backgrounds */
   --color-border: #E7E5E4;           /* Warm light border */
+  --progress-track-bg: #E2E8F0;      /* Distinct grey track for progress bar backgrounds */
 
   /* ─── Semantic Status ───
      Red/green avoided for colorblind safety; using amber/blue/coral instead */

@@ -23,35 +23,35 @@ export default function PaymentDistribution({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {/* KHQR */}
-        <div>
+        <div className="analytics-progress-row">
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
             <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>KHQR Scan</span>
             <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>${khqrSum.toFixed(2)} ({khqrPct}%)</span>
           </div>
-          <div style={{ height: '8px', background: 'var(--color-border)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ width: `${khqrPct}%`, height: '100%', background: 'var(--brand-primary)', borderRadius: '4px' }} />
+          <div className="analytics-progress-track" style={{ height: '8px', background: 'var(--progress-track-bg, #E2E8F0)', borderRadius: '4px', overflow: 'hidden' }}>
+            <div className="analytics-progress-bar" style={{ width: `${khqrPct}%`, height: '100%', background: 'var(--brand-primary)', borderRadius: '4px' }} />
           </div>
         </div>
 
         {/* CASH */}
-        <div>
+        <div className="analytics-progress-row">
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
             <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Cash</span>
             <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>${cashSum.toFixed(2)} ({cashPct}%)</span>
           </div>
-          <div style={{ height: '8px', background: 'var(--color-border)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ width: `${cashPct}%`, height: '100%', background: 'var(--accent-warm)', borderRadius: '4px' }} />
+          <div className="analytics-progress-track" style={{ height: '8px', background: 'var(--progress-track-bg, #E2E8F0)', borderRadius: '4px', overflow: 'hidden' }}>
+            <div className="analytics-progress-bar" style={{ width: `${cashPct}%`, height: '100%', background: 'var(--accent-warm)', borderRadius: '4px' }} />
           </div>
         </div>
 
         {/* CARD */}
-        <div>
+        <div className="analytics-progress-row">
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
             <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Credit Card</span>
             <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>${cardSum.toFixed(2)} ({cardPct}%)</span>
           </div>
-          <div style={{ height: '8px', background: 'var(--color-border)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ width: `${cardPct}%`, height: '100%', background: '#4bbe04', borderRadius: '4px' }} />
+          <div className="analytics-progress-track" style={{ height: '8px', background: 'var(--progress-track-bg, #E2E8F0)', borderRadius: '4px', overflow: 'hidden' }}>
+            <div className="analytics-progress-bar" style={{ width: `${cardPct}%`, height: '100%', background: '#4bbe04', borderRadius: '4px' }} />
           </div>
         </div>
       </div>

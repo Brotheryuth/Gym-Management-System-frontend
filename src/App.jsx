@@ -329,6 +329,7 @@ export default function App() {
           <DashboardOverview
             recentMembers={recentMembers}
             payments={payments}
+            plans={plans}
             setActiveView={setActiveView}
             onDeleteMember={handleDeleteMember}
             onEditMember={handleEditMember}
@@ -354,6 +355,7 @@ export default function App() {
             recentMembers={recentMembers}
             apiError={apiError}
             isEditing={!!editingMemberID}
+            onViewProfile={setProfileMember}
           />
         )}
 

@@ -6,10 +6,12 @@ import MemberDemographics from './dashboard/MemberDemographics';
 import PeakTraffic from './dashboard/PeakTraffic';
 import LiveCheckoutStream from './dashboard/LiveCheckoutStream';
 import QuickShortcuts from './dashboard/QuickShortcuts';
+import PlanPopularityRings from './dashboard/PlanPopularityRings';
 
 export default function DashboardOverview({
   recentMembers = [],
   payments = [],
+  plans = [],
   setActiveView,
   onPayPending,
   onViewProfile
@@ -266,7 +268,7 @@ export default function DashboardOverview({
       />
 
       {/* Graphical Breakdown Row */}
-      <div className="purity-grid-2-3" style={{ gridTemplateColumns: '1fr 1fr 1.2fr', gap: '24px' }}>
+      <div className="purity-grid-2-3" style={{ gridTemplateColumns: '1fr 1fr 1.15fr', gap: '24px', alignItems: 'start' }}>
         <PaymentDistribution
           khqrSum={khqrSum}
           cashSum={cashSum}
@@ -280,11 +282,18 @@ export default function DashboardOverview({
           ageStats={ageStats}
           totalCount={totalActiveCount}
         />
-        <PeakTraffic
-          slots={slots}
-          slotCounts={slotCounts}
-          maxSlotCount={maxSlotCount}
-        />
+        {/* Column 3: Stacked Peak Traffic + Plan Popularity Ring Analytics */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <PeakTraffic
+            slots={slots}
+            slotCounts={slotCounts}
+            maxSlotCount={maxSlotCount}
+          />
+          <PlanPopularityRings
+            recentMembers={recentMembers}
+            plans={plans}
+          />
+        </div>
       </div>
 
       {/* Simplified Live Operations feed & quick actions */}
