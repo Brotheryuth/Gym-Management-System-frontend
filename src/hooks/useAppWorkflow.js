@@ -249,7 +249,6 @@ export default function useAppWorkflow({
       planID: plans.length > 0 ? String(plans[0].planID) : '',
       startDate: new Date().toISOString().split('T')[0]
     }));
-    setActiveView('dashboard');
   };
 
   const handleSubscribeFromProfile = (member) => {

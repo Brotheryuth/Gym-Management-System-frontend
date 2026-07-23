@@ -57,10 +57,23 @@ export default function MemberManagement({
         (m.memberID && String(m.memberID).toLowerCase().includes(term))
       );
       const matchesGender = genderFilter === 'ALL' || m.gender === genderFilter;
-      const matchesPlan = planFilter === 'ALL' || m.planName === planFilter;
+      const isUnsubscribed = m.planName === 'No Active Plan' || m.status !== 'ACTIVE';
+      const matchesPlan = planFilter === 'ALL' || (
+        planFilter === 'UNSUBSCRIBED' ? isUnsubscribed : m.planName === planFilter
+      );
       return matchesSearch && matchesGender && matchesPlan;
     })
     .sort((a, b) => {
+      if (sortBy === 'UNSUBSCRIBED_FIRST') {
+        const isSubA = a.status === 'ACTIVE' ? 1 : 0;
+        const isSubB = b.status === 'ACTIVE' ? 1 : 0;
+        return isSubA - isSubB;
+      }
+      if (sortBy === 'SUBSCRIBED_FIRST') {
+        const isSubA = a.status === 'ACTIVE' ? 1 : 0;
+        const isSubB = b.status === 'ACTIVE' ? 1 : 0;
+        return isSubB - isSubA;
+      }
       if (sortBy === 'NAME_ASC') return (a.fullName || '').localeCompare(b.fullName || '');
       if (sortBy === 'NAME_DESC') return (b.fullName || '').localeCompare(a.fullName || '');
       if (sortBy === 'GENDER') return (a.gender || '').localeCompare(b.gender || '');
