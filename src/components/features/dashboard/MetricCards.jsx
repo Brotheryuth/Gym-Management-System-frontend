@@ -15,9 +15,9 @@ export default function MetricCards({
   const newClientsGoalPct = Math.min(100, todayNewMembersCount * 10);
 
   return (
-    <div className="purity-grid-4">
+    <div className="purity-grid-4" style={{ gap: '20px', marginBottom: '20px' }}>
       {/* 1. Today's Money */}
-      <div className="purity-card purity-metric-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '12px' }}>
+      <div className="purity-card purity-metric-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '12px', padding: '16px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Today's Money</span>
@@ -44,7 +44,7 @@ export default function MetricCards({
       </div>
 
       {/* 2. Active Members & Expiring Soon Insight */}
-      <div className="purity-card purity-metric-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '12px' }}>
+      <div className="purity-card purity-metric-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '12px', padding: '16px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Active Members</span>
@@ -78,7 +78,7 @@ export default function MetricCards({
       </div>
 
       {/* 3. New Clients Today */}
-      <div className="purity-card purity-metric-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '12px' }}>
+      <div className="purity-card purity-metric-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '12px', padding: '16px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>New Signups</span>
@@ -105,7 +105,7 @@ export default function MetricCards({
       </div>
 
       {/* 4. Total Sales */}
-      <div className="purity-card purity-metric-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '12px' }}>
+      <div className="purity-card purity-metric-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '12px', padding: '16px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Revenue</span>

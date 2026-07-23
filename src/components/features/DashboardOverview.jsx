@@ -195,7 +195,7 @@ export default function DashboardOverview({
         background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
         color: '#ffffff',
         border: '1px solid var(--color-border)',
-        padding: '28px 32px',
+        padding: '22px 28px',
         position: 'relative',
         overflow: 'hidden',
         borderRadius: 'var(--radius-lg)'
@@ -211,14 +211,14 @@ export default function DashboardOverview({
             textTransform: 'uppercase', 
             letterSpacing: '1.2px',
             display: 'inline-block',
-            marginBottom: '8px'
+            marginBottom: '6px'
           }}>
             Operational Dashboard
           </span>
-          <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#FFFFFF', fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#FFFFFF', fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px', margin: 0 }}>
             Cashier Control Center
           </h2>
-          <p style={{ fontSize: '13.5px', color: '#94A3B8', marginTop: '6px', maxWidth: '520px', lineHeight: '1.5' }}>
+          <p style={{ fontSize: '13px', color: '#94A3B8', marginTop: '4px', maxWidth: '540px', lineHeight: '1.45', margin: 0 }}>
             Monitor real-time payments, audit active subscriptions, and process gate entries from one visual control plane.
           </p>
         </div>
@@ -231,9 +231,10 @@ export default function DashboardOverview({
               color: '#ffffff',
               border: 'none',
               fontWeight: 700,
-              padding: '12px 24px',
+              padding: '10px 20px',
+              fontSize: '13px',
               borderRadius: 'var(--radius-sm)',
-              boxShadow: '0 4px 14px rgba(234, 88, 12, 0.3)'
+              boxShadow: '0 4px 12px rgba(234, 88, 12, 0.3)'
             }}
           >
             + Register Member Profile
@@ -243,10 +244,10 @@ export default function DashboardOverview({
         {/* Decorative ambient background shape */}
         <div style={{
           position: 'absolute',
-          right: '-50px',
-          bottom: '-50px',
-          width: '220px',
-          height: '220px',
+          right: '-40px',
+          bottom: '-40px',
+          width: '200px',
+          height: '200px',
           background: 'radial-gradient(circle, rgba(234, 88, 12, 0.15) 0%, rgba(0, 0, 0, 0) 70%)',
           pointerEvents: 'none',
           zIndex: 1
@@ -268,26 +269,30 @@ export default function DashboardOverview({
       />
 
       {/* Graphical Breakdown Row */}
-      <div className="purity-grid-2-3" style={{ gridTemplateColumns: '1fr 1fr 1.15fr', gap: '24px', alignItems: 'start' }}>
-        <PaymentDistribution
-          khqrSum={khqrSum}
-          cashSum={cashSum}
-          cardSum={cardSum}
-          khqrPct={khqrPct}
-          cashPct={cashPct}
-          cardPct={cardPct}
+      <div className="purity-grid-2-3" style={{ gridTemplateColumns: '1.15fr 1fr 1fr', gap: '20px', alignItems: 'stretch' }}>
+        {/* Column 1: Peak Attendance Traffic */}
+        <PeakTraffic
+          slots={slots}
+          slotCounts={slotCounts}
+          maxSlotCount={maxSlotCount}
         />
+
+        {/* Column 2: Member Demographics */}
         <MemberDemographics
           genderStats={genderStats}
           ageStats={ageStats}
           totalCount={totalActiveCount}
         />
-        {/* Column 3: Stacked Peak Traffic + Plan Popularity Ring Analytics */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <PeakTraffic
-            slots={slots}
-            slotCounts={slotCounts}
-            maxSlotCount={maxSlotCount}
+
+        {/* Column 3: Stacked Payment Distribution + Plan Popularity Ring Analytics */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <PaymentDistribution
+            khqrSum={khqrSum}
+            cashSum={cashSum}
+            cardSum={cardSum}
+            khqrPct={khqrPct}
+            cashPct={cashPct}
+            cardPct={cardPct}
           />
           <PlanPopularityRings
             recentMembers={recentMembers}
@@ -296,8 +301,8 @@ export default function DashboardOverview({
         </div>
       </div>
 
-      {/* Simplified Live Operations feed & quick actions */}
-      <div className="purity-grid-3-2">
+      {/* Simplified Live Operations feed & quick actions (Below the fold) */}
+      <div className="purity-grid-3-2" style={{ gridTemplateColumns: '1.15fr 2fr', gap: '20px', alignItems: 'start', marginTop: '4px' }}>
         <LiveCheckoutStream
           recentPaidTransactions={recentPaidTransactions}
           getMemberName={getMemberName}
