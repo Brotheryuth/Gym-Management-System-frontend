@@ -1,8 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function PlanPopularityRings({ recentMembers = [], plans = [] }) {
   const [isCardHovered, setIsCardHovered] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [isAnimated, setIsAnimated] = useState(false);
+  const [hoverProgress, setHoverProgress] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsAnimated(true), 60);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleCardMouseEnter = () => {
+    setIsCardHovered(true);
+    setHoverProgress(false);
+    setTimeout(() => {
+      setHoverProgress(true);
+    }, 30);
+  };
+
+  const handleCardMouseLeave = () => {
+    setIsCardHovered(false);
+    setHoveredIndex(null);
+    setHoverProgress(true);
+  };
 
   const totalCount = recentMembers.length || 1;
 
@@ -62,11 +83,8 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
   return (
     <div
       className="purity-card plan-rings-card"
-      onMouseEnter={() => setIsCardHovered(true)}
-      onMouseLeave={() => {
-        setIsCardHovered(false);
-        setHoveredIndex(null);
-      }}
+      onMouseEnter={handleCardMouseEnter}
+      onMouseLeave={handleCardMouseLeave}
       style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px 20px', position: 'relative' }}
     >
       {/* Header */}
@@ -109,8 +127,10 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
               const isDimmed = hoveredIndex !== null && !isHovered;
               const targetOffset = getOffset(item.circumference, item.pct);
               
-              // Run/draw from zero (circumference) to target number (targetOffset) when card or ring is hovered
-              const currentOffset = isCardHovered || isHovered ? targetOffset : item.circumference;
+              // Displays normal analysis by default; re-triggers progression drawing from 0 to target on card hover
+              const currentOffset = isCardHovered
+                ? (hoverProgress ? targetOffset : item.circumference)
+                : (isAnimated ? targetOffset : item.circumference);
 
               return (
                 <circle
@@ -133,7 +153,9 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
                     filter: isHovered
                       ? `drop-shadow(0 0 8px ${item.color}) brightness(1.2)`
                       : (isCardHovered ? `drop-shadow(0 0 3px ${item.color})` : 'none'),
-                    transition: `stroke-dashoffset 0.85s cubic-bezier(0.34, 1.25, 0.64, 1) ${idx * 110}ms, stroke-width 0.3s ease, opacity 0.3s ease, filter 0.3s ease`
+                    transition: isCardHovered && !hoverProgress
+                      ? 'none'
+                      : `stroke-dashoffset 2.25s cubic-bezier(0.34, 1.25, 0.64, 1) ${idx * 110}ms, stroke-width 0.3s ease, opacity 0.3s ease, filter 0.3s ease`
                   }}
                 />
               );
