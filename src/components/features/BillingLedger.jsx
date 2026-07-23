@@ -173,6 +173,50 @@ export default function BillingLedger({
           </div>
         </div>
 
+        {/* 1-Click Vertical Filter Rows */}
+        <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '14px', marginTop: '12px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="filter-chip-container" style={{ margin: 0 }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: '120px' }}>
+              Payment Method:
+            </span>
+            {[
+              { id: 'ALL', label: 'All' },
+              { id: 'KHQR', label: 'KHQR Scan' },
+              { id: 'BYCASH', label: 'Cash' },
+              { id: 'CREDITCARD', label: 'Credit / Debit Card' }
+            ].map(m => (
+              <button
+                key={m.id}
+                type="button"
+                className={`filter-chip-pill ${methodFilter === m.id ? 'active' : ''}`}
+                onClick={() => { setMethodFilter(m.id); setCurrentPage(1); }}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="filter-chip-container" style={{ margin: 0 }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: '120px' }}>
+              Status:
+            </span>
+            {[
+              { id: 'ALL', label: 'All' },
+              { id: 'PAID', label: 'Paid / Completed' },
+              { id: 'PENDING', label: 'Pending' }
+            ].map(s => (
+              <button
+                key={s.id}
+                type="button"
+                className={`filter-chip-pill ${statusFilter === s.id ? 'active' : ''}`}
+                onClick={() => { setStatusFilter(s.id); setCurrentPage(1); }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="dashboard-table-container">
           <table className="dashboard-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>

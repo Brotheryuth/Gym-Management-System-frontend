@@ -179,8 +179,8 @@ export default function MembershipManagement({
             </svg>
             Active Gym Subscriptions
           </h3>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ width: '210px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <div style={{ width: '240px' }}>
               <InputField
                 placeholder="Search member or plan..."
                 value={search}
@@ -190,109 +190,70 @@ export default function MembershipManagement({
               />
             </div>
 
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1.5px solid var(--color-border)',
-                backgroundColor: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="ACTIVE">Active Only</option>
-              <option value="PENDING">⏳ Pending Payment Only</option>
-              <option value="EXPIRED">Expired / Inactive</option>
-            </select>
-
-            {/* Gender Filter */}
-            <select
-              value={genderFilter}
-              onChange={(e) => { setGenderFilter(e.target.value); setCurrentPage(1); }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1.5px solid var(--color-border)',
-                backgroundColor: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option value="ALL">All Genders</option>
-              <option value="MALE">Male</option>
-              <option value="FEMALE">Female</option>
-              <option value="OTHER">Other</option>
-            </select>
-
-            {/* Plan Filter */}
-            <select
-              value={planFilter}
-              onChange={(e) => { setPlanFilter(e.target.value); setCurrentPage(1); }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1.5px solid var(--color-border)',
-                backgroundColor: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option value="ALL">All Plans</option>
-              <option value="EXPIRING_SOON"> Expiring Soon (&lt; 7 Days)</option>
-              {plans.map(p => (
-                <option key={p.planID} value={p.planName}>{p.planName}</option>
-              ))}
-            </select>
-
-            {/* Sort Dropdown */}
-            <select
-              value={sortBy}
-              onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1.5px solid var(--color-border)',
-                backgroundColor: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option value="DEFAULT">Sort by Default</option>
-              <option value="PENDING_FIRST">Pending Payment </option>
-              <option value="EXPIRING_SOON_FIRST"> Expiring Soon First</option>
-              <option value="NAME_ASC">Name (A-Z)</option>
-              <option value="NAME_DESC">Name (Z-A)</option>
-              <option value="GENDER">Gender</option>
-              <option value="PLAN">Gym Plan</option>
-              <option value="STATUS">Status</option>
-            </select>
-
             <Button
               onClick={handleAddMembershipClick}
               style={{ width: 'auto', minHeight: '38px', padding: '6px 16px', fontSize: '13px' }}
             >
-              Add Membership
+              + New Subscription
             </Button>
           </div>
         </div>
 
-        <div className="dashboard-table-container">
+        {/* 1-Click Vertical Filter Rows */}
+        <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '14px', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="filter-chip-container" style={{ margin: 0 }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: '60px' }}>
+              Status:
+            </span>
+            {[
+              { id: 'ALL', label: 'All' },
+              { id: 'ACTIVE', label: 'Active' },
+              { id: 'PENDING', label: 'Pending Payment' },
+              { id: 'EXPIRED', label: 'Expired / Inactive' }
+            ].map(s => (
+              <button
+                key={s.id}
+                type="button"
+                className={`filter-chip-pill ${statusFilter === s.id ? 'active' : ''}`}
+                onClick={() => { setStatusFilter(s.id); setCurrentPage(1); }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="filter-chip-container" style={{ margin: 0 }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: '60px' }}>
+              Plan:
+            </span>
+            <button
+              type="button"
+              className={`filter-chip-pill ${planFilter === 'ALL' ? 'active' : ''}`}
+              onClick={() => { setPlanFilter('ALL'); setCurrentPage(1); }}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              className={`filter-chip-pill ${planFilter === 'EXPIRING_SOON' ? 'active' : ''}`}
+              onClick={() => { setPlanFilter('EXPIRING_SOON'); setCurrentPage(1); }}
+            >
+              Expiring Soon (Within 7 Days)
+            </button>
+            {plans.map(p => (
+              <button
+                key={p.planID}
+                type="button"
+                className={`filter-chip-pill ${planFilter === p.planName ? 'active' : ''}`}
+                onClick={() => { setPlanFilter(p.planName); setCurrentPage(1); }}
+              >
+                {p.planName}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="dashboard-table-container" style={{ marginTop: '20px' }}>
           <table className="dashboard-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>

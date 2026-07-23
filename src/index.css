@@ -121,3 +121,49 @@ h1, h2, h3, h4 {
   display: none !important;
   background: transparent !important;
 }
+
+/* ─── 1-Click Interactive Filter Pill Chips ─── */
+.filter-chip-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.filter-chip-pill {
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  background-color: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+  line-height: 1.4;
+}
+
+.filter-chip-pill:hover {
+  border-color: #94a3b8;
+  background-color: #f1f5f9;
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.filter-chip-pill.active {
+  background-color: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+}
+
+.filter-chip-pill.active:hover {
+  background-color: #1e293b;
+  border-color: #1e293b;
+}

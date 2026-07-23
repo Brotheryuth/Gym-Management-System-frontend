@@ -182,8 +182,8 @@ export default function MemberManagement({
             </svg>
             Registered Member Profiles
           </h3>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ width: '210px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <div style={{ width: '240px' }}>
               <InputField
                 placeholder="Search name, ID, phone..."
                 value={search}
@@ -193,82 +193,61 @@ export default function MemberManagement({
               />
             </div>
 
-            {/* Gender Filter */}
-            <select
-              value={genderFilter}
-              onChange={(e) => { setGenderFilter(e.target.value); setCurrentPage(1); }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1.5px solid var(--color-border)',
-                backgroundColor: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option value="ALL">All Genders</option>
-              <option value="MALE">Male</option>
-              <option value="FEMALE">Female</option>
-              <option value="OTHER">Other</option>
-            </select>
-
-            {/* Plan Filter */}
-            <select
-              value={planFilter}
-              onChange={(e) => { setPlanFilter(e.target.value); setCurrentPage(1); }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1.5px solid var(--color-border)',
-                backgroundColor: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option value="ALL">All Plans</option>
-              <option value="UNSUBSCRIBED">Unsubscribed (No Plan)</option>
-              {plans.map(p => (
-                <option key={p.planID} value={p.planName}>{p.planName}</option>
-              ))}
-            </select>
-
-            {/* Sort Dropdown */}
-            <select
-              value={sortBy}
-              onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1.5px solid var(--color-border)',
-                backgroundColor: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option value="DEFAULT">Sort by Default</option>
-              <option value="UNSUBSCRIBED_FIRST"> Unsubscribed First</option>
-              <option value="SUBSCRIBED_FIRST">Subscribed First</option>
-              <option value="NAME_ASC">Name (A-Z)</option>
-              <option value="NAME_DESC">Name (Z-A)</option>
-              <option value="GENDER">Gender</option>
-              <option value="PLAN">Gym Plan</option>
-            </select>
-
             <Button
               onClick={handleRegisterClick}
               style={{ width: 'auto', minHeight: '38px', padding: '6px 16px', fontSize: '13px' }}
             >
-              Register Member
+              + Register Member
             </Button>
+          </div>
+        </div>
+
+        {/* 1-Click Vertical Filter Rows */}
+        <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '14px', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="filter-chip-container" style={{ margin: 0 }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: '60px' }}>
+              Tier:
+            </span>
+            <button
+              type="button"
+              className={`filter-chip-pill ${planFilter === 'ALL' ? 'active' : ''}`}
+              onClick={() => { setPlanFilter('ALL'); setCurrentPage(1); }}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              className={`filter-chip-pill ${planFilter === 'UNSUBSCRIBED' ? 'active' : ''}`}
+              onClick={() => { setPlanFilter('UNSUBSCRIBED'); setCurrentPage(1); }}
+            >
+              Unsubscribed (No Plan)
+            </button>
+            {plans.map(p => (
+              <button
+                key={p.planID}
+                type="button"
+                className={`filter-chip-pill ${planFilter === p.planName ? 'active' : ''}`}
+                onClick={() => { setPlanFilter(p.planName); setCurrentPage(1); }}
+              >
+                {p.planName}
+              </button>
+            ))}
+          </div>
+
+          <div className="filter-chip-container" style={{ margin: 0 }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: '60px' }}>
+              Gender:
+            </span>
+            {['ALL', 'MALE', 'FEMALE'].map(g => (
+              <button
+                key={g}
+                type="button"
+                className={`filter-chip-pill ${genderFilter === g ? 'active' : ''}`}
+                onClick={() => { setGenderFilter(g); setCurrentPage(1); }}
+              >
+                {g === 'ALL' ? 'All' : (g.charAt(0) + g.slice(1).toLowerCase())}
+              </button>
+            ))}
           </div>
         </div>
 
