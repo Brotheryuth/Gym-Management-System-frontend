@@ -1,43 +1,47 @@
-// Utility helper to format human-readable error messages for cashiers
+// Utility helper to format Java Backend exception messages for cashiers
 
 export function formatErrorMessage(error) {
   if (!error) return 'An unexpected error occurred. Please try again.';
 
   const raw = typeof error === 'string' ? error : error.message || String(error);
-  const msg = raw.toLowerCase();
+  const msg = raw.toLowerCase().trim();
 
-  // Duplicate Phone Number
-  if (msg.includes('phone') && (msg.includes('exist') || msg.includes('duplicate') || msg.includes('already') || msg.includes('registered') || msg.includes('unique'))) {
+  if (msg.includes('phone') && (msg.includes('exist') || msg.includes('duplicate') || msg.includes('already'))) {
     return 'This phone number is already registered to an existing member profile.';
   }
 
-  // Member already has active subscription
-  if ((msg.includes('active') || msg.includes('already') || msg.includes('exist')) && (msg.includes('membership') || msg.includes('plan') || msg.includes('subscri'))) {
-    return 'This member already has an active subscription. Cancel or wait for expiration before creating a new plan.';
+  if (msg.includes('already has an active') || msg.includes('active or pending membership') || (msg.includes('subscription') && msg.includes('already'))) {
+    return 'This member already has an active subscription. Cancel or wait for expiration before adding a new plan.';
   }
 
-  // Payment Declined / Terminal Error
-  if (msg.includes('payment') || msg.includes('card') || msg.includes('decline') || msg.includes('terminal')) {
-    return 'Payment authorization failed. Please verify payment method or switch to KHQR / Cash.';
+  if (msg.includes('member not found') || msg.includes('member is null')) {
+    return 'Selected member profile was not found in the database.';
+  }
+  if (msg.includes('plan not found') || msg.includes('membership plan not found')) {
+    return 'Selected gym plan was not found or has been removed.';
   }
 
-  // Login Failure
-  if (msg.includes('401') || msg.includes('unauthorized') || msg.includes('login failed')) {
-    return 'Invalid username or password. Please verify your credentials.';
+  if (msg.includes('member id is required')) {
+    return 'Please select a member before creating a subscription.';
+  }
+  if (msg.includes('plan id is required')) {
+    return 'Please select a valid gym plan.';
   }
 
-  // Admin Permission
-  if (msg.includes('403') || msg.includes('admin') || msg.includes('permission')) {
-    return 'Administrator privileges required to perform this action.';
+  // 5. Payment Authorization / Terminal Error
+  // Backend string: "Failed to process payment."
+  if (msg.includes('failed to process payment') || msg.includes('card declined')) {
+    return 'Payment authorization failed. Please verify payment details or switch to KHQR / Cash.';
   }
 
-  // Not Found
-  if (msg.includes('404') || msg.includes('not found')) {
-    return 'The requested resource could not be found.';
+  // 6. Already Inactive / Cancelled Membership
+  // Backend string: "Membership is already inactive."
+  if (msg.includes('already inactive') || msg.includes('already cancelled')) {
+    return 'This membership subscription is already inactive or cancelled.';
   }
 
-  // Clean up generic prefixes
-  let clean = raw.replace(/^(server error:\s*|failed to\s*)/i, '');
+  // Clean generic "Server Error:" prefix if present
+  let clean = raw.replace(/^(server error:\s*|failed to\s*|internal error:\s*)/i, '');
   if (clean.length > 0) {
     clean = clean.charAt(0).toUpperCase() + clean.slice(1);
     return clean;

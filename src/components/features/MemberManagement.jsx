@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { formatErrorMessage } from '../../utils/errorFormatter';
 import Card from '../ui/Card';
@@ -42,8 +43,9 @@ export default function MemberManagement({
     };
   });
 
-  const activeCount = enrichedMembers.filter(m => m.status === 'ACTIVE').length;
-  const inactiveCount = enrichedMembers.length - activeCount;
+  const totalMembers = enrichedMembers.length;
+  const activeMembers = enrichedMembers.filter(m => m.status === 'ACTIVE').length;
+  const inactiveMembers = totalMembers - activeMembers;
 
   // Filter & Sort
   const filteredMembers = enrichedMembers
@@ -69,14 +71,22 @@ export default function MemberManagement({
   const pageSize = 20;
   const paginatedMembers = filteredMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  const handleOpenAddModal = () => {
+  const handleRegisterClick = () => {
     setSelectedMember(null);
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (member) => {
+  const handleEditClick = (member) => {
     setSelectedMember(member);
     setIsModalOpen(true);
+  };
+
+  const handleDelete = (memberID) => {
+    if (cashier?.role !== 'ADMIN') {
+      onShowAdminWarning();
+      return;
+    }
+    onDeleteMember(memberID);
   };
 
   const handleFormSubmit = async (formData) => {

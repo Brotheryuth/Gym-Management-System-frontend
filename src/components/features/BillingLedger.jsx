@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { formatErrorMessage } from '../../utils/errorFormatter';
 import Card from '../ui/Card';
@@ -19,12 +20,26 @@ export default function BillingLedger({
   const [sortBy, setSortBy] = useState('DEFAULT');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // 1. Calculate stats from payments list
-  const totalRevenue = payments
-    .filter(p => p.status === 'PAID')
-    .reduce((sum, p) => sum + (p.finalAmount || p.amount || 0), 0);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isPaymentPaid = (p) => {
+    if (!p) return false;
+    const st = String(p.status || '').toUpperCase();
+    return st === 'PAID' || st === 'COMPLETED' || st === 'SUCCESS';
+  };
+  const getPaymentAmount = (p) => {
+    if (!p) return 0;
+    const val = p.finalAmount !== undefined ? p.finalAmount : (p.baseAmount !== undefined ? p.baseAmount : p.amount);
+    return Number(val) || 0;
+  };
 
-  const completedCount = payments.filter(p => p.status === 'PAID').length;
+  const paidPayments = payments.filter(isPaymentPaid);
+  const todayPayments = paidPayments.filter(p => {
+    const pDate = p.paymentDate || p.createAt;
+    return pDate && String(pDate).startsWith(todayStr);
+  });
+
+  const todayRevenue = todayPayments.reduce((sum, p) => sum + getPaymentAmount(p), 0);
+  const totalRevenue = paidPayments.reduce((sum, p) => sum + getPaymentAmount(p), 0);
   const pendingCount = payments.filter(p => p.status === 'PENDING').length;
 
   // 2. Filter & Sort payments list
@@ -99,7 +114,7 @@ export default function BillingLedger({
           </div>
           <div className="purity-metric-icon blue">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
           </div>
