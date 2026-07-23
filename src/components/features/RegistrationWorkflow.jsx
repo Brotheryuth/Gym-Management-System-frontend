@@ -38,7 +38,8 @@ export default function RegistrationWorkflow({
   handleResetFlow,
   recentMembers = [],
   apiError,
-  isEditing
+  isEditing,
+  onViewProfile
 }) {
   return (
     <div className="dashboard-grid">

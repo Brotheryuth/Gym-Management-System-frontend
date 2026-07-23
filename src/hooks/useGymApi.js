@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { loginApi } from '../services/authService';
-import { fetchPlansApi, createPlanApi, updatePlanApi, deletePlanApi } from '../services/planService';
-import { registerMemberApi, updateMemberApi, deleteMemberApi, fetchMembersApi } from '../services/memberService';
-import { createMembershipApi, cancelMembershipApi } from '../services/membershipService';
-import { confirmPaymentApi, refundPaymentApi } from '../services/paymentService';
+import {
+  loginApi,
+  fetchPlansApi, createPlanApi, updatePlanApi, deletePlanApi,
+  registerMemberApi, updateMemberApi, deleteMemberApi, fetchMembersApi,
+  createMembershipApi, cancelMembershipApi,
+  confirmPaymentApi, refundPaymentApi
+} from '../services/api';
 
 export default function useGymApi() {
   const [plans, setPlans] = useState([]);
