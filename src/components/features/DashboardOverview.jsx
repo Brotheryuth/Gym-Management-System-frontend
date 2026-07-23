@@ -15,7 +15,8 @@ export default function DashboardOverview({
   plans = [],
   setActiveView,
   onPayPending,
-  onViewProfile
+  onViewProfile,
+  onSelectPlanFilter
 }) {
   const {
     todaySales,
@@ -157,6 +158,10 @@ export default function DashboardOverview({
           <PlanPopularityRings
             recentMembers={recentMembers}
             plans={plans}
+            onSelectPlan={(planName) => {
+              if (onSelectPlanFilter) onSelectPlanFilter(planName);
+              setActiveView('memberships');
+            }}
           />
         </div>
       </div>

@@ -31,6 +31,7 @@ export default function App() {
   } = useGymApi();
 
   const [activeView, setActiveView] = useState('dashboard');
+  const [selectedPlanFilter, setSelectedPlanFilter] = useState('ALL');
 
   const {
     form, errors, isFormLoading, adminWarningOpen, setAdminWarningOpen,
@@ -79,6 +80,7 @@ export default function App() {
             onEditMember={handleEditMember}
             onPayPending={handlePayPending}
             onViewProfile={setProfileMember}
+            onSelectPlanFilter={setSelectedPlanFilter}
           />
         )}
 
@@ -126,6 +128,7 @@ export default function App() {
             onCreateMembership={handleCreateSubscriptionDirect}
             onPayPending={handlePayPending}
             onViewProfile={setProfileMember}
+            initialPlanFilter={selectedPlanFilter}
             onCancelMembership={async (id) => {
               try {
                 await cancelMembership(id);

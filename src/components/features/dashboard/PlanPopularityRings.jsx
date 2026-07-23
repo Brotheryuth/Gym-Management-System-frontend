@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-export default function PlanPopularityRings({ recentMembers = [], plans = [] }) {
+export default function PlanPopularityRings({ recentMembers = [], plans = [], onSelectPlan }) {
   const [isCardHovered, setIsCardHovered] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [animatingRingIdx, setAnimatingRingIdx] = useState(null);
   const [isAnimated, setIsAnimated] = useState(false);
   const [hoverProgress, setHoverProgress] = useState(true);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const timer = setTimeout(() => setIsAnimated(true), 60);
@@ -22,70 +24,82 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
   const handleCardMouseLeave = () => {
     setIsCardHovered(false);
     setHoveredIndex(null);
+    setAnimatingRingIdx(null);
     setHoverProgress(true);
+  };
+
+  const handleItemHover = (idx) => {
+    if (hoveredIndex === idx) return;
+    setHoveredIndex(idx);
+    setAnimatingRingIdx(null);
+    setTimeout(() => {
+      setAnimatingRingIdx(idx);
+    }, 20);
+  };
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
   };
 
   const totalCount = recentMembers.length || 1;
 
-  // Aggregate member counts per plan name or map to top 3 plan categories
-  const planMap = {};
-  recentMembers.forEach(m => {
-    const pName = m.planName || 'Standard Monthly';
-    planMap[pName] = (planMap[pName] || 0) + 1;
-  });
+  const colors = ['#f47609', '#10b981', '#6366f1', '#ec4899'];
+  const trackColors = [
+    'rgba(244, 118, 9, 0.15)',
+    'rgba(16, 185, 129, 0.15)',
+    'rgba(99, 102, 241, 0.15)',
+    'rgba(236, 72, 153, 0.15)'
+  ];
+  const radii = [54, 40, 26];
 
-  const planEntries = Object.entries(planMap).sort((a, b) => b[1] - a[1]);
-  
-  // Default fallbacks if no registrations exist yet
-  const top3 = [
-    {
-      name: planEntries[0]?.[0] || 'Standard Monthly',
-      count: planEntries[0]?.[1] || (recentMembers.length ? 1 : 0),
-      color: '#f47609', // Amber / Orange (Outer Ring)
-      trackColor: 'rgba(244, 118, 9, 0.15)',
-      r: 54,
-      circumference: 2 * Math.PI * 54
-    },
-    {
-      name: planEntries[1]?.[0] || 'VIP Annual',
-      count: planEntries[1]?.[1] || 0,
-      color: '#10b981', // Emerald Green (Middle Ring)
-      trackColor: 'rgba(16, 185, 129, 0.15)',
-      r: 40,
-      circumference: 2 * Math.PI * 40
-    },
-    {
-      name: planEntries[2]?.[0] || 'Student / Day Pass',
-      count: planEntries[2]?.[1] || 0,
-      color: '#6366f1', // Indigo / Purple (Inner Ring)
-      trackColor: 'rgba(99, 102, 241, 0.15)',
-      r: 26,
-      circumference: 2 * Math.PI * 26
-    }
+  const planList = plans.length > 0 ? plans.slice(0, 3) : [
+    { planName: 'Standard 1 Month' },
+    { planName: 'Premium 3 Months' },
+    { planName: 'Elite Year VIP' }
   ];
 
-  // Calculate percentages
-  const items = top3.map(p => ({
-    ...p,
-    pct: totalCount > 0 ? Math.min(100, Math.round((p.count / totalCount) * 100)) : 0
-  }));
+  const items = planList.map((plan, idx) => {
+    const name = plan.planName || 'Standard 1 Month';
+    const count = recentMembers.filter(m => m.planName === name).length;
+    const r = radii[idx] || 26;
+    const circumference = 2 * Math.PI * r;
+    const pct = totalCount > 0 ? Math.min(100, Math.round((count / totalCount) * 100)) : 0;
+    return {
+      name,
+      count,
+      pct,
+      color: colors[idx % colors.length],
+      trackColor: trackColors[idx % trackColors.length],
+      r,
+      circumference
+    };
+  });
 
   const center = 70;
   const baseStrokeWidth = 8.5;
 
   const getOffset = (circumference, pct) => {
-    const safePct = Math.max(3, Math.min(100, pct)); // min 3% so ring tip is visible if > 0
+    const safePct = Math.max(3, Math.min(100, pct));
     return circumference - (circumference * safePct) / 100;
   };
 
   const hoveredItem = hoveredIndex !== null ? items[hoveredIndex] : null;
+
+  // Calculate overlay tooltip positioning next to cursor on the right
+  const tooltipX = Math.min(mousePos.x + 14, 260);
+  const tooltipY = Math.max(10, mousePos.y - 32);
 
   return (
     <div
       className="purity-card plan-rings-card"
       onMouseEnter={handleCardMouseEnter}
       onMouseLeave={handleCardMouseLeave}
-      style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px 20px', position: 'relative' }}
+      onMouseMove={handleMouseMove}
+      style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px 20px', position: 'relative' }}
     >
       {/* Header */}
       <div>
@@ -97,8 +111,8 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
           </svg>
           Plan Popularity
         </h4>
-        <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px', margin: 0 }}>
-          Active subscription tier breakdown.
+        <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', margin: 0 }}>
+          Hover ring to inspect tier breakdown
         </p>
       </div>
 
@@ -116,7 +130,7 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
                 r={item.r}
                 fill="none"
                 stroke={item.trackColor}
-                strokeWidth={hoveredIndex === idx ? 12 : baseStrokeWidth}
+                strokeWidth={hoveredIndex === idx ? 11 : baseStrokeWidth}
                 style={{ transition: 'all 0.3s ease' }}
               />
             ))}
@@ -126,11 +140,11 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
               const isHovered = hoveredIndex === idx;
               const isDimmed = hoveredIndex !== null && !isHovered;
               const targetOffset = getOffset(item.circumference, item.pct);
+              const isRingGrowing = isHovered && animatingRingIdx === idx;
               
-              // Displays normal analysis by default; re-triggers progression drawing from 0 to target on card hover
-              const currentOffset = isCardHovered
-                ? (hoverProgress ? targetOffset : item.circumference)
-                : (isAnimated ? targetOffset : item.circumference);
+              const currentOffset = isHovered
+                ? (isRingGrowing ? targetOffset : item.circumference)
+                : (isCardHovered ? (hoverProgress ? targetOffset : item.circumference) : (isAnimated ? targetOffset : item.circumference));
 
               return (
                 <circle
@@ -140,29 +154,32 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
                   r={item.r}
                   fill="none"
                   stroke={item.color}
-                  strokeWidth={isHovered ? 12 : baseStrokeWidth}
+                  strokeWidth={isHovered ? 11 : baseStrokeWidth}
                   strokeDasharray={item.circumference}
                   strokeDashoffset={currentOffset}
                   strokeLinecap="round"
-                  onMouseEnter={() => setHoveredIndex(idx)}
-                  onMouseLeave={() => setHoveredIndex(null)}
+                  onMouseEnter={() => handleItemHover(idx)}
+                  onMouseLeave={() => { setHoveredIndex(null); setAnimatingRingIdx(null); }}
+                  onClick={() => onSelectPlan && onSelectPlan(item.name)}
                   style={{
                     cursor: 'pointer',
                     pointerEvents: 'stroke',
-                    opacity: isDimmed ? 0.22 : 1,
+                    opacity: isDimmed ? 0.25 : 1,
                     filter: isHovered
-                      ? `drop-shadow(0 0 8px ${item.color}) brightness(1.2)`
+                      ? `drop-shadow(0 0 10px ${item.color}) brightness(1.2)`
                       : (isCardHovered ? `drop-shadow(0 0 3px ${item.color})` : 'none'),
-                    transition: isCardHovered && !hoverProgress
-                      ? 'none'
-                      : `stroke-dashoffset 2.25s cubic-bezier(0.34, 1.25, 0.64, 1) ${idx * 110}ms, stroke-width 0.3s ease, opacity 0.3s ease, filter 0.3s ease`
+                    transition: isHovered
+                      ? (isRingGrowing ? 'stroke-dashoffset 1.3s cubic-bezier(0.34, 1.25, 0.64, 1), stroke-width 0.3s ease, opacity 0.3s ease, filter 0.3s ease' : 'none')
+                      : (isCardHovered && !hoverProgress
+                          ? 'none'
+                          : `stroke-dashoffset 2.25s cubic-bezier(0.34, 1.25, 0.64, 1) ${idx * 110}ms, stroke-width 0.3s ease, opacity 0.3s ease, filter 0.3s ease`)
                   }}
                 />
               );
             })}
           </svg>
 
-          {/* Center Label (Fixed Total Active Count) */}
+          {/* Center Label (Fixed Total Active Count - Never Resizes) */}
           <div style={{
             position: 'absolute',
             top: 0,
@@ -186,7 +203,7 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
           </div>
         </div>
 
-        {/* Legend List */}
+        {/* Legend List (Fixed Height Rows - Zero Layout Shift) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: 0 }}>
           {items.map((item, idx) => {
             const isHovered = hoveredIndex === idx;
@@ -196,8 +213,9 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
               <div
                 key={idx}
                 className="ring-legend-row"
-                onMouseEnter={() => setHoveredIndex(idx)}
-                onMouseLeave={() => setHoveredIndex(null)}
+                onMouseEnter={() => handleItemHover(idx)}
+                onMouseLeave={() => { setHoveredIndex(null); setAnimatingRingIdx(null); }}
+                onClick={() => onSelectPlan && onSelectPlan(item.name)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -205,23 +223,20 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
                   gap: '6px',
                   fontSize: '11.5px',
                   cursor: 'pointer',
-                  padding: '4px 8px',
+                  padding: '5px 8px',
                   borderRadius: '6px',
-                  backgroundColor: isHovered ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+                  backgroundColor: isHovered ? 'var(--brand-primary-light)' : 'transparent',
                   opacity: isDimmed ? 0.35 : 1,
-                  transform: isHovered ? 'translateX(4px)' : 'translateX(0)',
-                  transition: 'all 0.25s cubic-bezier(0.34, 1.25, 0.64, 1)'
+                  transition: 'background-color 0.2s ease, opacity 0.2s ease'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>
                   <span style={{
-                    width: isHovered ? '10px' : '8px',
-                    height: isHovered ? '10px' : '8px',
+                    width: '8px',
+                    height: '8px',
                     borderRadius: '50%',
                     backgroundColor: item.color,
-                    boxShadow: isHovered ? `0 0 6px ${item.color}` : 'none',
-                    flexShrink: 0,
-                    transition: 'all 0.2s ease'
+                    flexShrink: 0
                   }} />
                   <span style={{
                     fontWeight: isHovered ? 700 : 600,
@@ -229,7 +244,7 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis'
-                  }} title={item.name}>
+                  }}>
                     {item.name}
                   </span>
                 </div>
@@ -241,6 +256,46 @@ export default function PlanPopularityRings({ recentMembers = [], plans = [] }) 
           })}
         </div>
       </div>
+
+      {hoveredItem && (
+        <div style={{
+          position: 'absolute',
+          top: `${tooltipY}px`,
+          left: `${tooltipX}px`,
+          pointerEvents: 'none',
+          zIndex: 999,
+          backgroundColor: '#1E1B18',
+          color: '#FAFAF9',
+          padding: '6px 12px',
+          borderRadius: '8px',
+          fontSize: '11px',
+          boxShadow: `0 10px 25px rgba(0,0,0,0.35), 0 0 0 1.5px ${hoveredItem.color}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          animation: 'gamePopIn 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          whiteSpace: 'nowrap'
+        }}>
+          <span style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            backgroundColor: hoveredItem.color,
+            boxShadow: `0 0 8px ${hoveredItem.color}`
+          }} />
+          <span style={{
+            backgroundColor: hoveredItem.color,
+            color: '#ffffff',
+            fontSize: '9.5px',
+            fontWeight: 800,
+            padding: '2px 7px',
+            borderRadius: '6px',
+            letterSpacing: '0.5px'
+          }}>
+            Click ?
+          </span>
+        </div>
+      )}
     </div>
   );
 }

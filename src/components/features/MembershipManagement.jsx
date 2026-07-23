@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { formatErrorMessage } from '../../utils/errorFormatter';
 import Card from '../ui/Card';
@@ -16,15 +16,22 @@ export default function MembershipManagement({
   onCancelMembership,
   onViewProfile,
   cashier,
-  onShowAdminWarning
+  onShowAdminWarning,
+  initialPlanFilter = 'ALL'
 }) {
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [genderFilter, setGenderFilter] = useState('ALL');
-  const [planFilter, setPlanFilter] = useState('ALL');
+  const [planFilter, setPlanFilter] = useState(initialPlanFilter);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [sortBy, setSortBy] = useState('DEFAULT');
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    if (initialPlanFilter) {
+      setPlanFilter(initialPlanFilter);
+    }
+  }, [initialPlanFilter]);
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);

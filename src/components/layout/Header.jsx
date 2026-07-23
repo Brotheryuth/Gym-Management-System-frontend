@@ -10,10 +10,19 @@ import Button from '../ui/Button';
  * @param {function} props.logout - Log out handler
  */
 export default function Header({ activeView, isOffline, cashier, logout }) {
+  const titles = {
+    dashboard: 'Dashboard Overview',
+    register: 'Register Member',
+    members: 'Manage Members',
+    memberships: 'Manage Memberships',
+    plans: 'Gym Membership Plans',
+    payments: 'Billing Ledger & Receipts'
+  };
+
   return (
     <header className="dashboard-header">
       <h2 className="header-title">
-        {activeView === 'dashboard' ? 'Dashboard Overview' : 'Register Member'}
+        {titles[activeView] || 'Gym Management'}
       </h2>
       
       <div className="header-meta">
