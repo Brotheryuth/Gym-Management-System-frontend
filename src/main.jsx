@@ -34,8 +34,12 @@ window.fetch = async function (input, init) {
   return originalFetch.call(this, input, init);
 };
 
+import { ToastProvider } from './context/ToastContext.jsx'
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <ToastProvider>
+      <App />
+    </ToastProvider>
   </StrictMode>,
 )

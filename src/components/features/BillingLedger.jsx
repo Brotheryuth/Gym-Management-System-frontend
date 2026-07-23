@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useToast } from '../../context/ToastContext';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 import Card from '../ui/Card';
 import InputField from '../ui/InputField';
 import Button from '../ui/Button';
@@ -11,37 +12,41 @@ export default function BillingLedger({
   cashier,
   onShowAdminWarning
 }) {
+  const toast = useToast();
   const [search, setSearch] = useState('');
+  const [methodFilter, setMethodFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [sortBy, setSortBy] = useState('DEFAULT');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  // 1. Calculate stats from payments list
+  const totalRevenue = payments
+    .filter(p => p.status === 'PAID')
+    .reduce((sum, p) => sum + (p.finalAmount || p.amount || 0), 0);
 
-  // 1. Calculate stats
-  const paidPayments = payments.filter(p => p.status === 'PAID');
-  
-  const todayPayments = paidPayments.filter(p => {
-    const pDate = p.paymentDate || p.createAt;
-    return pDate && String(pDate).startsWith(todayStr);
-  });
-  
-  const todayRevenue = todayPayments.reduce((sum, p) => sum + Number(p.finalAmount), 0);
-  const totalRevenue = paidPayments.reduce((sum, p) => sum + Number(p.finalAmount), 0);
+  const completedCount = payments.filter(p => p.status === 'PAID').length;
+  const pendingCount = payments.filter(p => p.status === 'PENDING').length;
 
-  // 2. Filter list
-  const filtered = payments.filter(p => {
-    const term = search.toLowerCase();
-    
-    // Find member name
-    const member = recentMembers.find(m => String(m.id) === String(p.membershipID) || String(m.memberID) === String(p.membershipID));
-    const memberName = member ? member.fullName : 'Walk-in Customer';
-
-    return (
-      String(p.id).toLowerCase().includes(term) ||
-      memberName.toLowerCase().includes(term) ||
-      (p.method && p.method.toLowerCase().includes(term)) ||
-      (p.status && p.status.toLowerCase().includes(term))
-    );
-  });
+  // 2. Filter & Sort payments list
+  const filtered = payments
+    .filter(p => {
+      const term = search.toLowerCase();
+      const matchesSearch = (
+        (p.memberName && p.memberName.toLowerCase().includes(term)) ||
+        (p.id && String(p.id).toLowerCase().includes(term)) ||
+        (p.membershipID && String(p.membershipID).toLowerCase().includes(term))
+      );
+      const matchesMethod = methodFilter === 'ALL' || (p.method || 'KHQR').toUpperCase() === methodFilter;
+      const matchesStatus = statusFilter === 'ALL' || (p.status || 'PAID').toUpperCase() === statusFilter;
+      return matchesSearch && matchesMethod && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'AMOUNT_HIGH') return (b.finalAmount || b.amount || 0) - (a.finalAmount || a.amount || 0);
+      if (sortBy === 'AMOUNT_LOW') return (a.finalAmount || a.amount || 0) - (b.finalAmount || b.amount || 0);
+      if (sortBy === 'NEWEST') return new Date(b.paymentDate || b.createAt) - new Date(a.paymentDate || a.createAt);
+      if (sortBy === 'OLDEST') return new Date(a.paymentDate || a.createAt) - new Date(b.paymentDate || b.createAt);
+      return 0;
+    });
 
   const pageSize = 20;
   const paginatedPayments = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -52,9 +57,11 @@ export default function BillingLedger({
       return;
     }
     if (window.confirm('Are you sure you want to refund this payment transaction?')) {
-      onRefundPayment(paymentID).catch(err => {
-        alert('Error: ' + err.message);
-      });
+      onRefundPayment(paymentID)
+        .then(() => toast.success('Transaction refunded successfully.'))
+        .catch(err => {
+          toast.error(formatErrorMessage(err));
+        });
     }
   };
 

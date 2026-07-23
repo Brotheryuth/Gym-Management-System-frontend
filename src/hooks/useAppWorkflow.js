@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { validateField, validateProfileForm, validateBillingForm } from '../utils/validation';
+import { useToast } from '../context/ToastContext';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 export const DEFAULT_FORM_STATE = {
   fullName: '',
@@ -24,6 +26,7 @@ export default function useAppWorkflow({
   commitNewSubscriber,
   setActiveView
 }) {
+  const toast = useToast();
   const [form, setForm] = useState(DEFAULT_FORM_STATE);
   const [errors, setErrors] = useState({});
   const [isFormLoading, setIsFormLoading] = useState(false);
@@ -70,6 +73,7 @@ export default function useAppWorkflow({
     if (Object.keys(profileErrors).length > 0) {
       setErrors(profileErrors);
       setIsFormLoading(false);
+      toast.error('Please fix the validation errors in the form.');
       return;
     }
 
@@ -85,11 +89,14 @@ export default function useAppWorkflow({
       if (editingMemberID) {
         response = await updateMember(editingMemberID, memberPayload);
         setEditingMemberID(null);
+        toast.success(`Member "${response.fullName}" updated successfully.`);
       } else {
         response = await registerMember(memberPayload);
+        toast.success(`Member profile created for "${response.fullName}".`);
       }
       setRegisteredMember(response);
     } catch (err) {
+      toast.error(formatErrorMessage(err));
     } finally {
       setIsFormLoading(false);
     }
@@ -103,8 +110,9 @@ export default function useAppWorkflow({
     if (window.confirm('Are you sure you want to delete this member profile?')) {
       try {
         await deleteMember(memberID);
+        toast.success('Member profile deleted successfully.');
       } catch (err) {
-        alert('Error deleting member profile: ' + err.message);
+        toast.error(formatErrorMessage(err));
       }
     }
   };
@@ -125,7 +133,7 @@ export default function useAppWorkflow({
   const handlePayPending = (membership) => {
     const payItem = payments.find(p => String(p.membershipID) === String(membership.id) && p.status === 'PENDING');
     if (!payItem) {
-      alert('No pending payment record found for this membership.');
+      toast.warning('No pending payment record found for this membership.');
       return;
     }
     setPendingSubscription({
@@ -147,6 +155,7 @@ export default function useAppWorkflow({
     const billingErrors = validateBillingForm(form);
     if (Object.keys(billingErrors).length > 0) {
       setErrors(billingErrors);
+      toast.error('Please fix billing selection errors.');
       return;
     }
 
@@ -169,6 +178,7 @@ export default function useAppWorkflow({
       });
       setIsPaymentOpen(true);
     } catch (err) {
+      toast.error(formatErrorMessage(err));
     }
   };
 
@@ -188,7 +198,7 @@ export default function useAppWorkflow({
       });
       setIsPaymentOpen(true);
     } catch (err) {
-      alert(err.message || 'Failed to create subscription');
+      toast.error(formatErrorMessage(err));
     }
   };
 
@@ -221,8 +231,11 @@ export default function useAppWorkflow({
       setActiveReceipt(receiptPayload);
       setIsPaymentOpen(false);
       setPendingSubscription(null);
+      toast.success('Payment confirmed and subscription activated!');
     } catch (err) {
-      setPaymentError(err.message || 'Payment processing failed. Card declined or terminal error.');
+      const formattedErr = formatErrorMessage(err);
+      setPaymentError(formattedErr);
+      toast.error(formattedErr);
     }
   };
 

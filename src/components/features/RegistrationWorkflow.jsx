@@ -63,20 +63,6 @@ export default function RegistrationWorkflow({
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            
-            {apiError && (
-              <div style={{
-                backgroundColor: 'var(--color-error-bg)',
-                border: '1.5px solid var(--color-error)',
-                color: 'var(--color-error)',
-                padding: '16px',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '14px',
-                fontWeight: 600
-              }}>
-                Server Error: {apiError}
-              </div>
-            )}
 
             {/* Step 1 Profile registration */}
             <MemberForm

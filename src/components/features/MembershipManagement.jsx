@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useToast } from '../../context/ToastContext';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 import Card from '../ui/Card';
 import InputField from '../ui/InputField';
 import Button from '../ui/Button';
@@ -16,6 +17,7 @@ export default function MembershipManagement({
   cashier,
   onShowAdminWarning
 }) {
+  const toast = useToast();
   const [search, setSearch] = useState('');
   const [genderFilter, setGenderFilter] = useState('ALL');
   const [planFilter, setPlanFilter] = useState('ALL');
@@ -100,8 +102,9 @@ export default function MembershipManagement({
     try {
       await onCreateMembership(payload);
       setIsModalOpen(false);
+      toast.success('Membership subscription created.');
     } catch (err) {
-      alert(err.message || 'Failed to create membership subscription.');
+      toast.error(formatErrorMessage(err));
     } finally {
       setIsSaving(false);
     }

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import useGymApi from './hooks/useGymApi';
 import useAppWorkflow from './hooks/useAppWorkflow';
+import { useToast } from './context/ToastContext';
+import { formatErrorMessage } from './utils/errorFormatter';
 import LoginForm from './components/features/LoginForm';
 import PaymentModal from './components/features/PaymentModal';
 import ReceiptCard from './components/features/ReceiptCard';
@@ -19,6 +21,7 @@ import AdminWarningModal from './components/ui/AdminWarningModal';
 import './App.css';
 
 export default function App() {
+  const toast = useToast();
   const {
     plans, recentMembers, members, payments, cashier, isOffline,
     backendStatus, retryBackendConnection, isLoading, error: apiError,
@@ -124,7 +127,12 @@ export default function App() {
             onPayPending={handlePayPending}
             onViewProfile={setProfileMember}
             onCancelMembership={async (id) => {
-              try { await cancelMembership(id); } catch (err) { alert('Error canceling membership: ' + err.message); }
+              try {
+                await cancelMembership(id);
+                toast.success('Membership subscription canceled.');
+              } catch (err) {
+                toast.error(formatErrorMessage(err));
+              }
             }}
             cashier={cashier}
             onShowAdminWarning={() => setAdminWarningOpen(true)}
@@ -148,7 +156,12 @@ export default function App() {
             payments={payments}
             recentMembers={recentMembers}
             onRefundPayment={async (id) => {
-              try { await refundPayment(id); } catch (err) { alert('Error refunding payment: ' + err.message); }
+              try {
+                await refundPayment(id);
+                toast.success('Payment transaction refunded successfully.');
+              } catch (err) {
+                toast.error(formatErrorMessage(err));
+              }
             }}
             cashier={cashier}
             onShowAdminWarning={() => setAdminWarningOpen(true)}

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useToast } from '../../context/ToastContext';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 import Card from '../ui/Card';
 import InputField from '../ui/InputField';
 import Button from '../ui/Button';
@@ -17,6 +18,7 @@ export default function MemberManagement({
   cashier,
   onShowAdminWarning
 }) {
+  const toast = useToast();
   const [search, setSearch] = useState('');
   const [genderFilter, setGenderFilter] = useState('ALL');
   const [planFilter, setPlanFilter] = useState('ALL');
@@ -28,21 +30,23 @@ export default function MemberManagement({
   const [selectedMember, setSelectedMember] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Helper check if member has an active or valid subscription
-  const hasSub = (m) => {
-    return recentMembers.some(rm => 
-      String(rm.memberID) === String(m.memberID || m.id) ||
-      (rm.fullName && m.fullName && rm.fullName.toLowerCase() === m.fullName.toLowerCase())
+  // Cross-reference members with recentMembers to get real planName & status
+  const enrichedMembers = members.map(m => {
+    const activeSub = recentMembers.find(
+      rm => String(rm.memberID) === String(m.memberID || m.id)
     );
-  };
+    return {
+      ...m,
+      planName: activeSub ? activeSub.planName : (m.planName || 'No Active Plan'),
+      status: activeSub ? activeSub.status : (m.status || 'INACTIVE')
+    };
+  });
 
-  // 1. Stats Box calculations
-  const totalMembers = members.length;
-  const activeMembers = members.filter(m => m.status === 'ACTIVE').length;
-  const inactiveMembers = totalMembers - activeMembers;
+  const activeCount = enrichedMembers.filter(m => m.status === 'ACTIVE').length;
+  const inactiveCount = enrichedMembers.length - activeCount;
 
-  // 2. Filter & Sort list
-  const filteredMembers = members
+  // Filter & Sort
+  const filteredMembers = enrichedMembers
     .filter(m => {
       const term = search.toLowerCase();
       const matchesSearch = (
@@ -51,17 +55,10 @@ export default function MemberManagement({
         (m.memberID && String(m.memberID).toLowerCase().includes(term))
       );
       const matchesGender = genderFilter === 'ALL' || m.gender === genderFilter;
-      const isSubscribed = hasSub(m);
-      const matchesPlan = planFilter === 'ALL' 
-        ? true 
-        : planFilter === 'UNSUBSCRIBED' 
-          ? !isSubscribed 
-          : (m.planName === planFilter || recentMembers.some(rm => (String(rm.memberID) === String(m.memberID || m.id) || rm.fullName?.toLowerCase() === m.fullName?.toLowerCase()) && rm.planName === planFilter));
+      const matchesPlan = planFilter === 'ALL' || m.planName === planFilter;
       return matchesSearch && matchesGender && matchesPlan;
     })
     .sort((a, b) => {
-      if (sortBy === 'UNSUBSCRIBED_FIRST') return (hasSub(a) ? 1 : 0) - (hasSub(b) ? 1 : 0);
-      if (sortBy === 'SUBSCRIBED_FIRST') return (hasSub(b) ? 1 : 0) - (hasSub(a) ? 1 : 0);
       if (sortBy === 'NAME_ASC') return (a.fullName || '').localeCompare(b.fullName || '');
       if (sortBy === 'NAME_DESC') return (b.fullName || '').localeCompare(a.fullName || '');
       if (sortBy === 'GENDER') return (a.gender || '').localeCompare(b.gender || '');
@@ -72,37 +69,29 @@ export default function MemberManagement({
   const pageSize = 20;
   const paginatedMembers = filteredMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  const handleRegisterClick = () => {
+  const handleOpenAddModal = () => {
     setSelectedMember(null);
     setIsModalOpen(true);
   };
 
-  const handleEditClick = (member) => {
+  const handleOpenEditModal = (member) => {
     setSelectedMember(member);
     setIsModalOpen(true);
-  };
-
-  const handleDelete = (memberID) => {
-    if (cashier?.role !== 'ADMIN') {
-      onShowAdminWarning();
-      return;
-    }
-    onDeleteMember(memberID);
   };
 
   const handleFormSubmit = async (formData) => {
     setIsSaving(true);
     try {
       if (selectedMember) {
-        // Edit mode
         await onUpdateMember(selectedMember.memberID, formData);
+        toast.success(`Member "${formData.fullName}" updated.`);
       } else {
-        // Create mode
         await onRegisterMember(formData);
+        toast.success(`Member "${formData.fullName}" created.`);
       }
       setIsModalOpen(false);
     } catch (err) {
-      alert(err.message || 'An error occurred while saving the member profile.');
+      toast.error(formatErrorMessage(err));
     } finally {
       setIsSaving(false);
     }

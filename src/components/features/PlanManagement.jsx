@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useToast } from '../../context/ToastContext';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 import Card from '../ui/Card';
 import InputField from '../ui/InputField';
 import Button from '../ui/Button';
@@ -63,7 +64,6 @@ export default function PlanManagement({
       setPlanPrice('');
       setDuration('');
     }
-    setFormError('');
     setIsFormOpen(true);
   };
 
@@ -73,18 +73,19 @@ export default function PlanManagement({
       return;
     }
     if (window.confirm('Are you sure you want to delete this plan?')) {
-      onDeletePlan(planID).catch(err => {
-        alert('Error: ' + err.message);
-      });
+      onDeletePlan(planID)
+        .then(() => toast.success('Gym plan deleted successfully.'))
+        .catch(err => {
+          toast.error(formatErrorMessage(err));
+        });
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFormError('');
 
     if (!planName.trim() || !planPrice || !duration) {
-      setFormError('Please fill in all plan parameters.');
+      toast.error('Please fill in all plan parameters.');
       return;
     }
 
@@ -92,15 +93,16 @@ export default function PlanManagement({
     const durationNum = Number(duration);
 
     if (isNaN(priceNum) || priceNum < 0) {
-      setFormError('Price must be a valid positive number.');
+      toast.error('Price must be a valid positive number.');
       return;
     }
     if (isNaN(durationNum) || durationNum <= 0) {
-      setFormError('Duration must be a positive integer number of days.');
+      toast.error('Duration must be a positive integer number of days.');
       return;
     }
 
     try {
+      setIsSaving(true);
       const planPayload = {
         planName: planName.trim(),
         planPrice: priceNum,
@@ -109,8 +111,10 @@ export default function PlanManagement({
 
       if (editingPlan) {
         await onUpdatePlan(editingPlan.planID, planPayload);
+        toast.success(`Plan "${planPayload.planName}" updated.`);
       } else {
         await onCreatePlan(planPayload);
+        toast.success(`Plan "${planPayload.planName}" created.`);
       }
       setIsFormOpen(false);
     } catch (err) {

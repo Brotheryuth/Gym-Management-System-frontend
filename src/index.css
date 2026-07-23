@@ -109,20 +109,15 @@ h1, h2, h3, h4 {
   font-family: var(--font-heading);
 }
 
+/* ─── Modern Clean Seamless Scrollbars (No default bars / Zero layout glitch) ─── */
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-canvas);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: var(--radius-round);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  width: 0px !important;
+  height: 0px !important;
+  display: none !important;
+  background: transparent !important;
 }
