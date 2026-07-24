@@ -15,6 +15,7 @@ export default function Modal({
   children,
   onClose,
   closeOnBackdrop = true,
+  maxWidth = '520px'
 }) {
   // Prevent background scrolling when modal is open
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function Modal({
           background-color: var(--bg-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-lg);
-          max-width: 520px;
+          max-width: ${maxWidth};
           width: 100%;
           box-shadow: var(--shadow-modal);
           display: flex;
@@ -72,12 +73,12 @@ export default function Modal({
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 20px 24px;
+          padding: 16px 20px;
           border-bottom: 1px solid var(--color-border);
         }
         
         .modal-title {
-          font-size: 18px;
+          font-size: 17px;
           font-weight: 700;
           color: var(--text-primary);
         }
@@ -102,7 +103,7 @@ export default function Modal({
         }
         
         .modal-body {
-          padding: 24px;
+          padding: 18px 20px;
           overflow-y: auto;
           flex-grow: 1;
         }

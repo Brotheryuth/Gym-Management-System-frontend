@@ -55,46 +55,11 @@ export default function PaymentModal({
     onConfirm();
   };
 
-  const gateways = [
-    {
-      id: 'KHQR',
-      title: 'KHQR Scan',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="gateway-card-icon">
-          <rect x="3" y="3" width="7" height="7"></rect>
-          <rect x="14" y="3" width="7" height="7"></rect>
-          <rect x="14" y="14" width="7" height="7"></rect>
-          <rect x="3" y="14" width="7" height="7"></rect>
-        </svg>
-      )
-    },
-    {
-      id: 'BYCASH',
-      title: 'Physical Cash',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="gateway-card-icon">
-          <rect x="2" y="6" width="20" height="12" rx="2"></rect>
-          <circle cx="12" cy="12" r="2"></circle>
-        </svg>
-      )
-    },
-    {
-      id: 'CREDITCARD',
-      title: 'POS Card',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="gateway-card-icon">
-          <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
-          <line x1="2" y1="10" x2="22" y2="10"></line>
-        </svg>
-      )
-    }
-  ];
-
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Cashier Terminal Checkout" maxWidth="500px">
-      <div style={{ padding: '8px 4px', textAlign: 'center' }}>
+    <Modal isOpen={isOpen} onClose={onClose} title="Cashier Terminal Checkout">
+      <div style={{ textAlign: 'center' }}>
         
         {/* Payment Method Selector Pills */}
         <div style={{
@@ -103,23 +68,24 @@ export default function PaymentModal({
           backgroundColor: 'var(--color-bg-alt)',
           padding: '4px',
           borderRadius: 'var(--radius-md)',
-          marginBottom: '24px'
+          marginBottom: '16px'
         }}>
           {[
             { id: 'KHQR', title: 'KHQR Scan' },
             { id: 'BYCASH', title: 'Physical Cash' },
-            { id: 'CARD', title: 'Credit / Debit Card' }
+            { id: 'CREDITCARD', title: 'Credit / Debit Card' }
           ].map(m => (
             <button
               key={m.id}
+              type="button"
               onClick={() => onMethodChange(m.id)}
               style={{
                 flex: 1,
-                padding: '10px 8px',
+                padding: '8px 6px',
                 borderRadius: 'var(--radius-sm)',
                 border: 'none',
                 fontWeight: 700,
-                fontSize: '13px',
+                fontSize: '12.5px',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
                 backgroundColor: paymentMethod === m.id ? 'var(--brand-primary)' : 'transparent',
@@ -131,11 +97,11 @@ export default function PaymentModal({
           ))}
         </div>
 
-        <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '0 0 4px' }}>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 2px' }}>
           Processing payment for <strong>{memberName}</strong>
         </p>
         
-        <h2 style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 20px' }}>
+        <h2 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 14px' }}>
           ${(totalAmount || 0).toFixed(2)}
         </h2>
 
@@ -144,11 +110,11 @@ export default function PaymentModal({
             backgroundColor: 'var(--color-error-bg)',
             border: '1.5px solid var(--color-error)',
             color: 'var(--color-error)',
-            padding: '12px',
+            padding: '10px 12px',
             borderRadius: 'var(--radius-sm)',
             fontSize: '13px',
             fontWeight: 600,
-            marginBottom: '20px',
+            marginBottom: '14px',
             width: '100%'
           }}>
             Terminal Warning: {error}
@@ -157,12 +123,12 @@ export default function PaymentModal({
 
         {paymentMethod === 'KHQR' && (
           <div>
-            <div style={{ margin: '0 auto 16px', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ margin: '0 auto 10px', display: 'flex', justifyContent: 'center' }}>
               <img 
                 src={qrCodeImg} 
                 alt="KHQR Payment Code" 
                 style={{ 
-                  maxWidth: '240px', 
+                  maxWidth: '180px', 
                   width: '100%', 
                   height: 'auto', 
                   borderRadius: '12px',
@@ -170,14 +136,14 @@ export default function PaymentModal({
                 }} 
               />
             </div>
-            <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+            <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '14px' }}>
               Instruct member to scan this QR code using their banking application
             </p>
           </div>
         )}
 
         {paymentMethod === 'BYCASH' && (
-          <div className="cash-received-calc">
+          <div className="cash-received-calc" style={{ marginBottom: '14px' }}>
             <InputField
               label="Cash Received From Member ($)"
               type="number"
@@ -188,7 +154,7 @@ export default function PaymentModal({
               autoFocus
             />
             
-            <div style={{ marginTop: '12px' }}>
+            <div style={{ marginTop: '10px' }}>
               <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>
                 Physical Change Due
               </span>
@@ -200,14 +166,14 @@ export default function PaymentModal({
         )}
 
         {paymentMethod === 'CREDITCARD' && (
-          <div className="card-terminal-display">
+          <div className="card-terminal-display" style={{ marginBottom: '14px' }}>
             <div className="terminal-status-ring">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2.5">
                 <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
                 <line x1="2" y1="10" x2="22" y2="10"></line>
               </svg>
             </div>
-            <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+            <p style={{ fontSize: '13.5px', color: 'var(--text-muted)' }}>
               Awaiting reader interaction. Insert or tap payment card on active terminal.
             </p>
           </div>
@@ -220,24 +186,6 @@ export default function PaymentModal({
         >
           Confirm Payment Successful
         </Button>
-
-        {/* Resilient Payment switcher inside modal */}
-        <div className="payment-selector-dropdown-wrapper">
-          <label className="form-label" style={{ marginBottom: '8px' }}>Gateway Recovery (Switch payment method)</label>
-          <div className="gateway-grid">
-            {gateways.map((g) => (
-              <div
-                key={g.id}
-                className={`gateway-card ${paymentMethod === g.id ? 'active' : ''}`}
-                onClick={() => !isLoading && onMethodChange(g.id)}
-                style={{ padding: '10px', gap: '6px' }}
-              >
-                {g.icon}
-                <span className="gateway-card-title" style={{ fontSize: '11px' }}>{g.title}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </Modal>
   );
