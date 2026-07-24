@@ -24,7 +24,8 @@ export default function useAppWorkflow({
   createMembership,
   confirmPayment,
   commitNewSubscriber,
-  setActiveView
+  setActiveView,
+  activeView
 }) {
   const toast = useToast();
   const [form, setForm] = useState(DEFAULT_FORM_STATE);
@@ -256,7 +257,7 @@ export default function useAppWorkflow({
       planID: plans.length > 0 ? String(plans[0].planID) : '',
       startDate: new Date().toISOString().split('T')[0]
     }));
-    if (setActiveView) {
+    if (activeView === 'register' && setActiveView) {
       setActiveView('dashboard');
     }
   };

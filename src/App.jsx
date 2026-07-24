@@ -45,7 +45,7 @@ export default function App() {
     handlePaymentMethodChange, handleConfirmPayment, handleResetFlow, handleSubscribeFromProfile
   } = useAppWorkflow({
     plans, payments, cashier, registerMember, updateMember, deleteMember,
-    createMembership, confirmPayment, commitNewSubscriber, setActiveView
+    createMembership, confirmPayment, commitNewSubscriber, setActiveView, activeView
   });
 
   if (!cashier) {
