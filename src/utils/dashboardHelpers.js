@@ -127,7 +127,7 @@ export function calculateDashboardMetrics(recentMembers = [], payments = []) {
   const slots = ["08:00", "12:00", "16:00", "18:00", "20:00", "22:00"];
   const slotCounts = Array(slots.length).fill(0);
   recentMembers.forEach(m => {
-    const hash = (m.memberID || m.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hash = String(m.memberID || m.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const slotIdx = hash % slots.length;
     slotCounts[slotIdx]++;
   });

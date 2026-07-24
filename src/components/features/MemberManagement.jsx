@@ -110,7 +110,8 @@ export default function MemberManagement({
     setIsSaving(true);
     try {
       if (selectedMember) {
-        await onUpdateMember(selectedMember.memberID, formData);
+        const targetId = selectedMember.memberID || selectedMember.id;
+        await onUpdateMember(targetId, formData);
         toast.success(`Member "${formData.fullName}" updated.`);
       } else {
         await onRegisterMember(formData);

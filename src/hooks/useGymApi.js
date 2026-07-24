@@ -67,7 +67,8 @@ export default function useGymApi() {
             phoneNumber: m.phoneNumber,
             dob: m.dob,
             gender: m.gender,
-            status: m.status || 'ACTIVE'
+            memberStatus: m.memberStatus || m.status || 'ACTIVE',
+            status: m.memberStatus || m.status || 'ACTIVE'
           }));
         }
       }

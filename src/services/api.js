@@ -33,12 +33,26 @@ export const loginApi = (username, password) =>
 export const fetchMembersApi = () => request('/api/members');
 
 export const registerMemberApi = async (memberData) => {
-  const data = await request('/api/members', { method: 'POST', body: memberData }, 'Failed to register member profile');
+  const payload = {
+    fullName: memberData.fullName,
+    phoneNumber: memberData.phoneNumber,
+    dob: memberData.dob,
+    gender: memberData.gender,
+    memberStatus: memberData.memberStatus || memberData.status || 'ACTIVE'
+  };
+  const data = await request('/api/members', { method: 'POST', body: payload }, 'Failed to register member profile');
   return { ...data, memberID: String(data.memberID || data.id) };
 };
 
 export const updateMemberApi = async (memberID, memberData) => {
-  const data = await request(`/api/members/${memberID}`, { method: 'PUT', body: memberData }, 'Failed to update member profile');
+  const payload = {
+    fullName: memberData.fullName,
+    phoneNumber: memberData.phoneNumber,
+    dob: memberData.dob,
+    gender: memberData.gender,
+    memberStatus: memberData.memberStatus || memberData.status || 'ACTIVE'
+  };
+  const data = await request(`/api/members/${memberID}`, { method: 'PUT', body: payload }, 'Failed to update member profile');
   return { ...data, memberID: String(data.memberID || data.id) };
 };
 

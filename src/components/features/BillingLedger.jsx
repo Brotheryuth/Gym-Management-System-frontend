@@ -260,7 +260,7 @@ export default function BillingLedger({
                   return (
                     <tr key={p.id ? `p-${p.id}-${idx}` : `pay-idx-${idx}`}>
                       <td style={{ fontWeight: 'bold' }}>#{p.id}</td>
-                      <td>{getMemberName(p.membershipID)}</td>
+                      <td>{p.memberName || getMemberName(p.membershipID)}</td>
                       <td>${Number(p.baseAmount || p.finalAmount).toFixed(2)}</td>
                       <td>{p.discount || 0}%</td>
                       <td style={{ fontWeight: 'bold', color: p.status === 'PAID' ? 'var(--text-primary)' : 'var(--text-muted)' }}>

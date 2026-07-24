@@ -21,6 +21,7 @@ export default function PlanManagement({
   const [editingPlan, setEditingPlan] = useState(null);
   const [deletingPlanItem, setDeletingPlanItem] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   
   // Form fields
@@ -131,6 +132,8 @@ export default function PlanManagement({
       setIsFormOpen(false);
     } catch (err) {
       setFormError(err.message || 'Error occurred while saving plan.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -300,6 +303,7 @@ export default function PlanManagement({
             </Button>
             <Button
               type="submit"
+              loading={isSaving}
               style={{ flex: 1 }}
             >
               {editingPlan ? 'Update Plan' : 'Create Plan'}

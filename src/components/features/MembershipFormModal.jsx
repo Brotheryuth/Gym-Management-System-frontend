@@ -97,11 +97,14 @@ export default function MembershipFormModal({
             {members.length === 0 ? (
               <option value="">No eligible members available</option>
             ) : (
-              members.map((m) => (
-                <option key={m.memberID} value={m.memberID}>
-                  {m.fullName} ({m.phoneNumber})
-                </option>
-              ))
+              members.map((m) => {
+                const idVal = m.memberID || m.id;
+                return (
+                  <option key={idVal} value={idVal}>
+                    {m.fullName} ({m.phoneNumber})
+                  </option>
+                );
+              })
             )}
           </select>
           {errors.memberID && <span className="form-error-msg">{errors.memberID}</span>}

@@ -86,7 +86,8 @@ export default function MemberFormModal({
       fullName: fullName.trim(),
       phoneNumber: phoneNumber.trim(),
       dob,
-      gender
+      gender,
+      memberStatus: initialData?.memberStatus || initialData?.status || 'ACTIVE'
     });
   };
 
