@@ -8,6 +8,7 @@ A cashier terminal portal for managing gym memberships, subscriber registrations
 - [Backend & Cold-Start Note](#backend--cold-start-note)
 - [Quick Demo Bypass](#quick-demo-bypass)
 - [Tech Stack](#tech-stack)
+- [AI Use Declaration](#ai-use-declaration)
 
 ---
 
@@ -70,3 +71,15 @@ For fast evaluation without waiting for backend authentication:
 - **Framework**: React + Vite
 - **Styling**: Pure CSS
 - **State & API**: Custom React Hooks & Fetch API
+
+---
+
+## AI Use Declaration
+
+| Category | Details & Purpose |
+| :--- | :--- |
+| **AI Agent Type** | **Antigravity AI** (Google DeepMind, Gemini 3.6 Flash model) |
+| **UI & Mobile Layouts** | Transformed user design ideas into React UI components,  (~99% AI-generated from my ideas and refinements). |
+| **Code Organization** | Refactored React hooks (`useGymApi`, `useAppWorkflow`) and API services following DRY and single-responsibility principles. |
+| **Error Handling & Sync** | Fixed error message parsing for Javalin backend responses, added optimistic UI state updates, and configured automatic server pings to keep the backend alive. |
+| **Pair Programming** | Assisted with code generation, debugging, refactoring, and verifying project builds. |
