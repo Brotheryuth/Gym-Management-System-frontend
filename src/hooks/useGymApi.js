@@ -116,55 +116,58 @@ export default function useGymApi() {
     }
   }, [mapMemberships]);
 
-  // Check backend health & auto-retry while waking up
+  // Check backend health & status
   const checkBackend = useCallback(async () => {
     try {
-      const res = await fetch('/api/plans', { signal: AbortSignal.timeout(4000) });
+      const res = await fetch('/api/plans', { signal: AbortSignal.timeout(5000) });
       if (res.ok) {
         const data = await res.json();
         setPlans(data);
         setIsOffline(false);
-        setBackendStatus('connected');
-        await refreshDatabase();
+        setBackendStatus(prev => {
+          if (prev !== 'connected') {
+            refreshDatabase().catch(() => {});
+          }
+          return 'connected';
+        });
         return true;
       } else {
         setIsOffline(true);
-        setBackendStatus('connecting');
+        setBackendStatus(prev => (prev === 'connected' ? 'offline' : 'connecting'));
         return false;
       }
     } catch (err) {
-      console.warn('Backend offline or waking up...', err);
+      console.warn('Backend connection check failed:', err);
       setIsOffline(true);
-      setBackendStatus(prev => prev === 'connected' ? 'offline' : 'connecting');
+      setBackendStatus(prev => (prev === 'connected' ? 'offline' : 'connecting'));
       return false;
     }
   }, [refreshDatabase]);
 
-  // Polling effect: pings Render every 3.5s until it responds
+  // Continuous Heartbeat & Auto-Reconnect Polling Effect
   useEffect(() => {
     let isMounted = true;
     let timerId = null;
 
-    async function initCheck() {
-      setIsLoading(true);
+    const runCheck = async () => {
       const ok = await checkBackend();
+      if (!isMounted) return;
+
+      // Keep backend alive & monitor health:
+      // When connected -> ping every 25s (prevents Render backend from spinning down due to inactivity)
+      // When disconnected/waking up -> fast poll every 3.5s to reconnect immediately
+      const nextInterval = ok ? 25000 : 3500;
+      timerId = setTimeout(runCheck, nextInterval);
+    };
+
+    setIsLoading(true);
+    runCheck().finally(() => {
       if (isMounted) setIsLoading(false);
-
-      if (!ok && isMounted) {
-        timerId = setInterval(async () => {
-          const connected = await checkBackend();
-          if (connected && timerId) {
-            clearInterval(timerId);
-          }
-        }, 3500);
-      }
-    }
-
-    initCheck();
+    });
 
     return () => {
       isMounted = false;
-      if (timerId) clearInterval(timerId);
+      if (timerId) clearTimeout(timerId);
     };
   }, [checkBackend]);
 
