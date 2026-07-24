@@ -130,7 +130,7 @@ export default function DashboardOverview({
       />
 
       {/* Graphical Breakdown Row */}
-      <div className="purity-grid-2-3" style={{ gridTemplateColumns: '1.15fr 1fr 1fr', gap: '20px', alignItems: 'stretch' }}>
+      <div className="purity-grid-2-3" style={{ gap: '20px', alignItems: 'stretch' }}>
         {/* Column 1: Peak Attendance Traffic */}
         <PeakTraffic
           slots={slots}
@@ -167,7 +167,7 @@ export default function DashboardOverview({
       </div>
 
       {/* Simplified Live Operations feed & quick actions (Below the fold) */}
-      <div className="purity-grid-3-2" style={{ gridTemplateColumns: '1.15fr 2fr', gap: '20px', alignItems: 'start', marginTop: '4px' }}>
+      <div className="purity-grid-3-2" style={{ gap: '20px', alignItems: 'start', marginTop: '4px' }}>
         <LiveCheckoutStream
           recentPaidTransactions={recentPaidTransactions}
           getMemberName={getMemberName}

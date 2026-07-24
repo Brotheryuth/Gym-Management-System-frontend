@@ -1751,17 +1751,41 @@ body .app-shell .main-layout .dashboard-header button.logout-btn:not(:disabled):
 @media (max-width: 1200px) {
   .purity-grid-4 {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
+    gap: 14px !important;
   }
 
   .purity-grid-2-3 {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 14px !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
   }
 
   .purity-grid-3-2 {
     grid-template-columns: 1fr !important;
-    gap: 14px !important;
+    gap: 16px !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .app-shell {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  .main-layout {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .dashboard-overview-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 16px 20px !important;
+  }
+
+  .purity-grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
