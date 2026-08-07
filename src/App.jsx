@@ -33,6 +33,7 @@ export default function App() {
 
   const [activeView, setActiveView] = useState('dashboard');
   const [selectedPlanFilter, setSelectedPlanFilter] = useState('ALL');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const {
     form, errors, isFormLoading, adminWarningOpen, setAdminWarningOpen,
@@ -67,10 +68,21 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Sidebar activeView={activeView} setActiveView={setActiveView} />
+      <Sidebar 
+        activeView={activeView} 
+        setActiveView={setActiveView} 
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
+      />
 
       <div className="main-layout">
-        <Header activeView={activeView} isOffline={isOffline} cashier={cashier} logout={logout} />
+        <Header 
+          activeView={activeView} 
+          isOffline={isOffline} 
+          cashier={cashier} 
+          logout={logout} 
+          onToggleSidebar={() => setIsMobileSidebarOpen(prev => !prev)}
+        />
 
         {activeView === 'dashboard' && (
           <DashboardOverview

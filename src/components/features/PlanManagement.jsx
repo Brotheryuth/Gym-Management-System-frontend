@@ -52,12 +52,22 @@ export default function PlanManagement({
     }
   });
 
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingPlan(null);
+    setPlanName('');
+    setPlanPrice('');
+    setDuration('');
+    setFormError('');
+  };
+
   const handleOpenForm = (plan = null) => {
     if (cashier?.role !== 'ADMIN') {
       onShowAdminWarning();
       return;
     }
     
+    setFormError('');
     if (plan) {
       setEditingPlan(plan);
       setPlanName(plan.planName);
@@ -96,6 +106,7 @@ export default function PlanManagement({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError('');
 
     if (!planName.trim() || !planPrice || !duration) {
       toast.error('Please fill in all plan parameters.');
@@ -129,9 +140,11 @@ export default function PlanManagement({
         await onCreatePlan(planPayload);
         toast.success(`Plan "${planPayload.planName}" created.`);
       }
-      setIsFormOpen(false);
+      handleCloseForm();
     } catch (err) {
-      setFormError(err.message || 'Error occurred while saving plan.');
+      const errMsg = formatErrorMessage(err);
+      setFormError(errMsg);
+      toast.error(errMsg);
     } finally {
       setIsSaving(false);
     }
@@ -265,10 +278,25 @@ export default function PlanManagement({
 
       <Modal
         isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
+        onClose={handleCloseForm}
         title={editingPlan ? 'Edit Gym Plan' : 'Create New Gym Plan'}
       >
         <form onSubmit={handleSubmit}>
+          {formError && (
+            <div style={{
+              backgroundColor: 'var(--color-error-bg)',
+              border: '1.5px solid var(--color-error)',
+              color: 'var(--color-error)',
+              padding: '10px 12px',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '13px',
+              fontWeight: 600,
+              marginBottom: '14px'
+            }}>
+              {formError}
+            </div>
+          )}
+
           <InputField
             label="Plan Title / Name"
             placeholder="e.g. Premium Monthly Access"
@@ -296,7 +324,7 @@ export default function PlanManagement({
             <Button
               type="button"
               variant="secondary"
-              onClick={() => setIsFormOpen(false)}
+              onClick={handleCloseForm}
               style={{ flex: 1 }}
             >
               Cancel
